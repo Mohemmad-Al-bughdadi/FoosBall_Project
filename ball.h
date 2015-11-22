@@ -8,44 +8,42 @@
 class Ball : public Body
 {
 private:
-    float radius;    
+    double radius;
     const unsigned int texture_id;
 public:
-    static map<BodyPair,float> RollingFrictionCoffs;
-    Ball(const float &theradius,const Vector3 &origin,const float &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o);
+    static map<BodyPair,double> RollingFrictionCoffs;
+    Ball(const double &theradius,const Vector3 &origin,const double &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o);
     ~Ball(){}
-	virtual void draw(const Vector3 &color);
-    float getRadius() const;
-	Vector3 *collidewithball(const Line &l)const
-	{
-		Vector3 *p = 0;
-		if (l.distancefrom(centerofmass) <= radius)
-		{
-			Vector3 beg = l.getBegin();
-			Vector3 oren = l.getOrentiation();
-			float L = (beg - centerofmass).length();
-			float t = sqrt(L*L - radius*radius);
-			p = new Vector3(beg + oren*t);
-			if (((*p) - centerofmass).length() > L)
-			{
-				delete p;
-				p = new Vector3(beg - oren*t);
-			}
-		}
-		return p;
-	}
-	void print()
-	{
-		cout << "Ball(" << this->centerofmass.X() << "," << this->centerofmass.Y() << "," << this->centerofmass.Z() << ")\n";
-	}
+    virtual void draw(const Vector3 &color)const;
+    double getRadius() const;
+    Vector3 *collidewithball(const Line &l)const
+    {
+        Vector3 *p=0;
+        if(l.distancefrom(centerofmass)<=radius)
+        {
+            Vector3 beg=l.getBegin();
+            Vector3 oren=l.getOrentiation();
+            double L = (beg - centerofmass).length();
+            double t=sqrt(L*L-radius*radius);
+            p=new Vector3(beg+oren*t);
+			if (((*p) - centerofmass).length()>L)
+            {
+                delete p;
+                p=new Vector3(beg-oren*t);
+            }
+        }
+        return p;
+    }
     Vector3 *collidewithball(const Plane &p)const
     {
         Vector3 ballorigin=centerofmass;
-        if(p.distancefrom(ballorigin)<=radius)
+        double dist=p.distancefrom(ballorigin);
+        if(dist<=radius)
         {           
-			ballorigin.Translate(p.getNormal()*(radius));
-            if(p.ispointin(ballorigin))
-				ballorigin.Translate((-p.getNormal())*radius*2 );
+            Vector3 nor=p.getNormal();            
+            ballorigin.Translate(nor*(dist));
+            if(!p.ispointin(ballorigin))
+                ballorigin.Translate((-nor)*dist*2);
             return new Vector3(ballorigin);
         }
         return 0;
@@ -62,13 +60,14 @@ public:
             v.Normalize();
             return new Vector3(ballorigin+(v*b.radius));
         }
+        return 0;
     }
     void collideballwithball(Ball &b,const Force &ballforce)
     {
         Vector3 *p=0;
-        if(p=ballwithball(b))
+        if((p=ballwithball(b))!=NULL)
         {
-            float e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
+            double e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
             Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
             Force J(v,v.length()/dt);
             Force friction(Vector3(),0);

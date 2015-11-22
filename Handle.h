@@ -8,23 +8,19 @@
 enum Handle_Type
 {
 	goalkeeper, //1 fossman
-	defenser, //2 fossman
-	enemyattacker, //3 fossman
-	mider, //5fossman
-	enemymider, //5fossman
-	attacker, //3fossman
-	enemydefenser,//2fossman
-	enemygoalkeeper	//1fossman
+	defenser, //2 fossman	
+	mider, //5fossman	
+	attacker, //3fossman	
 };
 class Handle :public Body
 {
 private:
 	Handle_Type Htype;
-	const float radius;
+	const double radius;
     vector<Player*> players;
     vector<Ball*> balls;
     public:
-        Handle(const Handle_Type &thetype, const float &handle_mass, const Vector3 &handle_center,const Line &handle_rotationaxis,const float &r,const bool &fr,const Vector3 &frt,Body *o);
+        Handle(const Handle_Type &thetype, const double &handle_mass, const Vector3 &handle_center,const Line &handle_rotationaxis,const double &r,const bool &fr,const Vector3 &frt,Body *o);
         ~Handle()
         {
 			for (unsigned int i = 0; i<players.size(); i++)
@@ -33,7 +29,7 @@ private:
                 delete balls[i];
         }
 
-       virtual void draw(const Vector3 &color);
+       virtual void draw(const Vector3 &color)const;
 	   bool operator ==(const Body *b) const;
        int numberofplayers()const
        {
@@ -54,9 +50,9 @@ private:
        void proceedintime();
        void collidewithball(Ball &b,const Force &ballforce)
        {
-        /*   Vector3 cen=b.getcenterofmass();
-           float brad=b.getRadius();
-           if(rotationaxis.distancefrom(cen)<=radius+brad)
+           Vector3 cen=b.getcenterofmass();
+           double brad=b.getRadius();
+           /*if(rotationaxis.distancefrom(cen)<=radius+brad)
            {
                Vector3 beg=rotationaxis.getBegin(),end=rotationaxis.getEnd();
                Vector3 nor=Plane(cen,beg,end).getNormal();
@@ -66,7 +62,7 @@ private:
                else
                    beg=cen+(nor*brad);
 
-               float e=(*Body::RestCoffeciants.find(BodyPair(&b,this))).second;
+               double e=(*Body::RestCoffeciants.find(BodyPair(&b,this))).second;
                Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
                Force J(v,v.length()/dt);
                Force friction(Vector3(),0);
@@ -88,12 +84,8 @@ private:
                }
                applytorque(friction,beg,true);
            }*/
-		   for (unsigned int i = 0; i < players.size(); i++)
-		   {
-
-			   players[i]->collidewithball(b, ballforce);
-		   }
-
+		   for (unsigned int i = 0; i<players.size(); i++)
+               players[i]->collidewithball(b,ballforce);
        }
        void fillconstants(Wall *w)const;
        void collidewallwithballs(Wall &w, const Force &handle_force);

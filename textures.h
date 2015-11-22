@@ -1,5 +1,16 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
+#ifdef __linux__
+#include <SOIL/SOIL.h>
+int LoadTexture(const char *filename)
+{
+    return SOIL_load_OGL_texture(filename,
+                            SOIL_LOAD_AUTO,
+                            SOIL_CREATE_NEW_ID,
+                                    SOIL_FLAG_MIPMAPS
+                            );
+}
+#else
 #include <iostream>
 #include <gl\glext.h>
 int num_texture = 0;
@@ -64,4 +75,5 @@ int LoadTexture(const char *filename)
 
 	return ( num_texture); // Returns the current texture OpenGL ID
 }
+#endif
 #endif

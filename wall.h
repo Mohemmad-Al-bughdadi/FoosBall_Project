@@ -3,7 +3,7 @@
 #include "body.h"
 #include "ball.h"
 #include "plane.h"
-#include <playsoundapi.h>
+
 
 using namespace std;
 class Quad
@@ -24,13 +24,13 @@ public :
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, textid);
 		glEnable(GL_TEXTURE_2D);
-        glColor3fv(color.toArray());
+        glColor3dv(color.toArray());
         glBegin(GL_QUADS);
-        glNormal3fv(p.getNormal().toArray());
-		glTexCoord2f(1, 1); glVertex3fv(p1.toArray());
-		glTexCoord2f(0, 1); glVertex3fv(p2.toArray());
-		glTexCoord2f(0, 0); glVertex3fv(p3.toArray());
-		glTexCoord2f(1, 0); glVertex3fv(p4.toArray());
+        glNormal3dv(p.getNormal().toArray());
+        glTexCoord2d(1, 1); glVertex3dv(p1.toArray());
+        glTexCoord2d(0, 1); glVertex3dv(p2.toArray());
+        glTexCoord2d(0, 0); glVertex3dv(p3.toArray());
+        glTexCoord2d(1, 0); glVertex3dv(p4.toArray());
         glEnd();
 		glDisable(GL_TEXTURE_2D);
 		glPopMatrix();
@@ -44,17 +44,7 @@ public :
         p=q.p;
         textid=q.textid;
         return *this;
-    }
-    void print()const
-    {
-        p1.print();
-        cout<<'\n';
-        p2.print();
-        cout<<'\n';
-        p3.print();
-        cout<<'\n';
-        p4.print();
-    }
+    }   
     void Translate(const Vector3 &v)
     {
         p1.Translate(v);
@@ -63,33 +53,31 @@ public :
         p4.Translate(v);
         p.Translate(v);
     }
-    void Rotate(const Vector3 &v,const float &theta)
+    void Rotate(const Vector3 &p11,const Vector3 &p21,const double &theta)
     {
-        p1.Rotate(v,theta);
-        p2.Rotate(v,theta);
-        p3.Rotate(v,theta);
-        p4.Rotate(v,theta);
-        p.Rotate(v,theta);
+        p1.Rotate(p11,p21,theta);
+        p2.Rotate(p11,p21,theta);
+        p3.Rotate(p11,p21,theta);
+        p4.Rotate(p11,p21,theta);
+        p.Rotate(p11,p21,theta);
     }
     Plane getplane()const
     {
         return p;
     }
     Vector3 *collidewithball(Ball &b,Quad &q)
-    {
-		
+    {		
         Vector3 *pint=b.collidewithball(p);
         q=*this;       
         if(pint!=NULL)
         {           
             Vector3 pintde=*pint;
-            float theta= Vector3::anglebetweeninradian(p1-pintde,p2-pintde)
+            double theta= Vector3::anglebetweeninradian(p1-pintde,p2-pintde)
                     +Vector3::anglebetweeninradian(p2-pintde,p3-pintde)
                     +Vector3::anglebetweeninradian(p3-pintde,p4-pintde)
                     +Vector3::anglebetweeninradian(p4-pintde,p1-pintde);
-            theta*=180/PI;
-			
-            if (!((theta<366.0&&theta>354.0)?360.0:roundf(theta)==360.0))
+            theta*=180/PI;            
+            if(!doublesequal(theta,360))
                 return 0;
         }        
         return pint;
@@ -98,11 +86,11 @@ public :
 class Wall : public Body
 {    
 private:
-    const float dipth, width , height;
+    const double dipth, width , height;
 public:
 	Quad *left, *right, *front, *back, *ground, *up;
 
-    Wall(const float &thewidth,const float &theheight,const float &thedipth, const float &mass,Vector3 center,const Line &rot,const bool &fr,const Vector3 &frt,Body *o,GLuint*tids);
+    Wall(const double &thewidth,const double &theheight,const double &thedipth, const double &mass,Vector3 center,const Line &rot,const bool &fr,const Vector3 &frt,Body *o,GLuint*tids);
     ~Wall()
     {
         delete left;
@@ -112,15 +100,15 @@ public:
         delete ground;
         delete up;
     }
-    float getdipth()const
+    double getdipth()const
     {
         return dipth;
     }
-    float getheight()const
+    double getheight()const
     {
         return height;
     }
-    float getwidth()const
+    double getwidth()const
     {
         return width;
     }
@@ -129,13 +117,8 @@ public:
        Vector3 *p;
        Quad q(*left);
        if((((p=up->collidewithball(b,q)))!=NULL)||((p=right->collidewithball(b,q))!=NULL)||((p=left->collidewithball(b,q))!=NULL)||((p=ground->collidewithball(b,q))!=NULL)||((p=front->collidewithball(b,q))!=NULL)||((p=back->collidewithball(b,q))!=NULL))
-       {
-		   if (origin){
-			   cout << "hit with player"<<endl;
-		   this->print();
-		   }
-		
-		   float e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
+       {		 
+           double e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
            Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
            Force J(v,v.length()/dt);
            Force friction(Vector3(),0);
@@ -143,7 +126,7 @@ public:
 		   v = Plane((b.getcenterofmass()-(*p)), *p).projectonplane(v);
            friction.setOrentation(-v);
            friction.setStrength(J.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
-           if((transition.iszero())||(roundf(Vector3::abscosbetween(ballforce.getOrentation(),transition))!=1))
+           if((transition.iszero())||(Vector3::abscosbetween(ballforce.getOrentation(),transition)!=1))
            {
                Plane qp=q.getplane();
                Vector3 nor=qp.getNormal();
@@ -168,35 +151,15 @@ public:
            else
            {
 			   if (!b.getrotationalvelocity().iszero())
-				   b.applytorque(-friction.getStrength()*(((*Ball::RollingFrictionCoffs.find(BodyPair(&b,this))).second)/(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second),true);
+                   b.applytorque(-friction.getStrength()*(((*Ball::RollingFrictionCoffs.find(BodyPair(&b,this))).second)/(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second),true);
            }
        }
 	}
-    void draw(const Vector3 &color) ;       
-    bool operator ==(const Body *b) const;
-    void print()const
-    {
-		cout << "Front(";
-		front->print();
-		cout <<")\n";
-        front->print();
-        cout<<"Back(";
-        back->print();
-        cout<<")\n";
-		cout << "up(";
-
-        up->print();
-        cout<<")\n";
-		cout << "Ground(";
-        ground->print();
-        cout<<")\n";
-		cout << "right(";
-        right->print();
-        cout<<")\n";
-		cout << "Left(";
-        left->print();
-		cout << ")\n";
-    }
+    void draw(const Vector3 &color)const;
+    void proceedintime();
+    void Translate(const Vector3 &diff);
+    void Rotate();
+    bool operator ==(const Body *b) const;    
 };
 
 #endif // WALL_H

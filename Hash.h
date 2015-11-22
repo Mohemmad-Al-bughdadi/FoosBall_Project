@@ -14,7 +14,7 @@ public:
 };
 struct KeyHasher
 {
-	size_t operator()(const BodyPair &k)const;
+    size_t operator()(const BodyPair &k)const;
 };
 #endif
 

@@ -12,5 +12,5 @@ bool BodyPair::operator <(const BodyPair&bp)const
 
 size_t KeyHasher::operator()(const BodyPair &k)const
 {
-	return size_t(k.body1->getmass()) + size_t(k.body2->getmass());
+    return size_t(k.body1->getmass()) + size_t(k.body2->getmass());
 }

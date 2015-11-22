@@ -3,56 +3,56 @@
 #include <cmath>
 #include <iostream>
 #include <exception>
-
+#include <doublehelper.h>
 #define PI 3.141592653589f
 #define TWOPI  2*PI
 #define gravity 9.7973f
 #define PIdiv180 (PI/180.0f)
 
 using namespace std;
-
 class Vector3
 {
 private:
-    float x,y,z;
+    double x,y,z;
+    double sqr(const double &x)const
+    {
+        return x*x;
+    }
+
 public:   
-    Vector3(float coordx=0,float coordy=0,float coordz=0):x(coordx),y(coordy),z(coordz)
+    Vector3(double coordx=0,double coordy=0,double coordz=0):x(coordx),y(coordy),z(coordz)
     {  
     }
     bool iszero()const
     {
-        return((x>=0.0001f?x:roundf(x))==0)&&((y>=0.0001?y:roundf(y))==0)&&((z>=0.0001?z:roundf(z))==0);
+        return (doublesequal(x,0))&&(doublesequal(y,0))&&(doublesequal(z,0));
     }
     Vector3(const Vector3 &v):x(v.x),y(v.y),z(v.z)
     {
-    }
-    void print()const
-    {
-        cout<<'( '<<x<<' , '<<y<<' , '<<z<<' ) \n';
-    }
-    float length()const
+    }    
+    double length()const
     {
         return sqrt(x*x+y*y+z*z);
     }
-    float X()const
+    double X()const
     {
         return x;
     }
-    float Y()const
+    double Y()const
     {
         return y;
     }
-    float Z()const
+    double Z()const
     {
         return z;
     }
-    static float anglebetweeninradian(const Vector3 &v1,const Vector3 &v2)
+    static double anglebetweeninradian(const Vector3 &v1,const Vector3 &v2)
     {		
         return acos((v1*v2)/(v1.length()*v2.length()));
     }
     void Normalize()
     {
-        float len=length();
+        double len=length();
         if(len==0)
             return;
         if(len!=1)
@@ -82,7 +82,7 @@ public:
     {
         return Vector3(-x,-y,-z);
     }
-    Vector3 operator *(const float &scale)const
+    Vector3 operator *(const double &scale)const
     {
         return Vector3(x*scale,y*scale,z*scale);
     }
@@ -91,11 +91,11 @@ public:
         return Vector3(v.x*u.x,v.y*u.y,v.z*u.z);
     }
 
-    float operator *(const Vector3 &v)const
+    double operator *(const Vector3 &v)const
     {
         return x*v.x+y*v.y+z*v.z;
     }
-    Vector3 operator /(const float &scale)const
+    Vector3 operator /(const double &scale)const
     {
         try
         {
@@ -104,7 +104,7 @@ public:
         catch(exception e)
         {
             cerr<<e.what()<<'\n';
-			return 0;
+            return 0;
 
         }
     }
@@ -130,7 +130,7 @@ public:
         z-=other.z;
         return *this;
     }
-    Vector3 &operator *=(const float& scale)
+    Vector3 &operator *=(const double& scale)
     {
         x*=scale;
         y*=scale;
@@ -139,7 +139,7 @@ public:
     }
     static bool isperpendicular(const Vector3 &u,const Vector3 &v)
     {
-		return (u*v) == 0;
+        return (u*v) == 0;
     }
     static bool isparallel(const Vector3 &u,const Vector3 &v)
     {
@@ -148,21 +148,14 @@ public:
             return true;
         return ((u.x/v.x)==(u.y/v.y))&&((u.y/v.y)==(u.z/v.z));
     }
-    Vector3 &operator /=(const float& scale)
+    Vector3 &operator /=(const double& scale)
     {
-        try
-        {
-            x/=scale;
-            y/=scale;
-            z/=scale;
-            return *this;
-        }
-        catch(exception e)
-        {
-            cerr<<e.what()<<'\n';
-        }
+        x/=scale;
+        y/=scale;
+        z/=scale;
+        return *this;
     }
-    static float abscosbetween(const Vector3 &v1,const Vector3 &v2)
+    static double abscosbetween(const Vector3 &v1,const Vector3 &v2)
     {													
 		return fabs((v1*v2) / (v1.length()*v2.length()));
     }
@@ -173,76 +166,80 @@ public:
         y+=v.y;
         z+=v.z;
     }
-    void RotateX(const float &angle)
+    void RotateX(const double &angle)
     {
-        float y0=y;
-        float z0=z;
-        float theta=(float)(angle*PIdiv180);
-        float cost=(float)cos(theta);
-        float sint=(float)sin(theta);
+        double y0=y;
+        double z0=z;
+        double theta=(double)(angle*PIdiv180);
+        double cost=(double)cos(theta);
+        double sint=(double)sin(theta);
 
         z=y0*sint+z0*cost;
         y=y0*cost-z0*sint;
     }
-    void RotateY(const float &angle)
+    void RotateY(const double &angle)
     {
-        float x0=x;
-        float z0=z;
-        float theta=(float)(angle*PIdiv180);
-        float cost=(float)cos(theta);
-        float sint=(float)sin(theta);
+        double x0=x;
+        double z0=z;
+        double theta=(double)(angle*PIdiv180);
+        double cost=(double)cos(theta);
+        double sint=(double)sin(theta);
 
         z=x0*sint+z0*cost;
         x=x0*cost-z0*sint;
 
     }
-    void RotateZ(const float &angle)
+    void RotateZ(const double &angle)
     {
-        float x0=x;
-        float y0=y;
-        float theta=(float)(angle*PIdiv180);
-        float cost=(float)cos(theta);
-        float sint=(float)sin(theta);
+        double x0=x;
+        double y0=y;
+        double theta=(double)(angle*PIdiv180);
+        double cost=(double)cos(theta);
+        double sint=(double)sin(theta);
 
         y=x0*sint+y0*cost;
         x=x0*cost-y0*sint;
     }
 
-    Vector3 Rotate(Vector3 v,const float &theta1)  const
+    void Rotate(const Vector3 &p1,const Vector3 &p2,const double &theta)
     {
-		float a = 0, b = 0, c = 0;
-
-        float theta=(float)(theta1*PIdiv180);
-
-        a=(cos(theta)+(v.x*v.x)*(1-cos(theta)))*x;
-        a+=(v.x*v.y*(1-cos(theta))-v.z*sin(theta))*y;
-        a+=(v.x*v.z*(1-cos(theta))+v.y*sin(theta))*z;
-
-        b=(v.y*v.x*(1-cos(theta))+v.z*sin(theta))*x;
-        b+=(cos(theta)+v.y*v.y*(1-cos(theta)))*y;
-        b+=(v.y*v.z*(1-cos(theta))-v.x*sin(theta))*z;
-
-        c=(v.z*v.x*(1-cos(theta))-v.y*sin(theta))*x;
-        c+=(v.z*v.y*(1-cos(theta))+v.x*sin(theta))*y;
-        c+=(cos(theta)+v.z*v.z*(1-cos(theta)))*z;
-		return Vector3(a, b, c);
+        Vector3 orentation=p2-p1;
+        orentation.Normalize();
+        double u=orentation.X(),v=orentation.Y(),w=orentation.Z(),a=p1.X(),b=p1.Y(),c=p1.Z();
+        double resX=((a*(sqr(v) + sqr(w))) - u*(b*v + c*w - u*x - v*y - w*z))*(1 - cos(theta)) + x*cos(theta) + (-c*v + b*w - w*y + v*z)*sin(theta);
+        double resY=((b*(sqr(u)+sqr(w))) - v*(a*u + c*w - u*x - v*y - w*z))*(1 - cos(theta)) + y* cos(theta) + (c*u - a*w + w*x - u*z)*sin(theta);
+        double resZ=((c*(sqr(u)+sqr(v))) - w*(a*u + b*v - u*x - v*y - w*z))*(1 - cos(theta)) + z* cos(theta) + (-b*u + a*v - v*x + u*y)*sin(theta);
+        x=resX;
+        y=resY;
+        z=resZ;
     }
-    void Scale(const float &c)
+    void RotateAsVector(const Vector3 &p1,const Vector3 &p2,const double &theta)
+    {
+        Vector3 zero,res(*this);
+        zero.Rotate(p1,p2,theta);
+        res.Rotate(p1,p2,theta);
+        res-=zero;
+        x=res.x;
+        y=res.y;
+        z=res.z;
+    }
+
+    void Scale(const double &c)
     {
         x*=c;
         y*=c;
         z*=c;
     }
 
-     float *toArray()  const
+    double *toArray()  const
     {
-        float *a=new float[3];
+        double *a=new double[3];
         a[0]=x;
         a[1]=y;
         a[2]=z;
         return a;
     }
-    static Vector3 crossproduct(const Vector3 &v,const Vector3 &u)
+    static Vector3 crossproduct(const Vector3 &u,const Vector3 &v)
     {
         Vector3 resVector;
         resVector.x = u.y*v.z - u.z*v.y;
@@ -252,4 +249,6 @@ public:
         return resVector;
     }
 };
+
+
 #endif // VECTOR3_H

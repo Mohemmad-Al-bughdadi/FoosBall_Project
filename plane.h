@@ -7,7 +7,7 @@ struct Plane
 private:
     Vector3 normal;
     Vector3 referencepoint;    
-    float d;
+    double d;
 public:
     Plane(const Vector3 &n,const Vector3 &r)
         :normal(n),referencepoint(r)
@@ -31,53 +31,56 @@ public:
         p.Translate(normal);
         return ispointlower(p);
     }
-    float distancefrom(const Vector3 &v)const
+    double distancefrom(const Vector3 &v)const
     {
-        float a=normal.X();
-        float b=normal.Y();
-        float c=normal.Z();
+        double a=normal.X();
+        double b=normal.Y();
+        double c=normal.Z();
         return fabs((normal*v)+d)/sqrt(a*a+b*b+c*c);
     }
     Vector3 getapoint()const
     {
         return referencepoint;
     }
-    float getD() const
+    double getD() const
     {
         return d;
     }
     Vector3 projectonplane(const Vector3 &v)const
     {
         Vector3 p=referencepoint+v;
-		Vector3 normal_mult_length = normal*v.length()*Vector3::abscosbetween(v, normal);
-		Vector3 p1 = p + normal_mult_length;
+		Vector3 nor = normal*v.length()*Vector3::abscosbetween(v, normal);
+        Vector3 p1=p+nor;
         if(!ispointin(p1))
-			p1 = p - normal_mult_length;
+            p1=p-nor;
         Vector3 out(p1-referencepoint);
-		return Vector3(roundf(out.X()),roundf(out.Y()),roundf(out.Z()));
+        return Vector3(out.X(),out.Y(),out.Z());
     }
     void Translate(const Vector3 &v)
     {
         referencepoint.Translate(v);
         d=(-normal*referencepoint);
     }
-    void Rotate(const Vector3 &p,const float &theta)
+    void Rotate(const Vector3 p1,const Vector3 &p2,const double &theta)
     {
-        referencepoint.Rotate(p,theta);
-        normal.Rotate(p,theta);
+        referencepoint.Rotate(p1,p2,theta);
+        normal.RotateAsVector(p1,p2,theta);
         d=(-normal*referencepoint);
     }
     bool ispointin(const Vector3 &p)const
     {
-		return (((p*normal) + d) >= 0.0001f ? ((p*normal) + d):roundf((p*normal) + d)) == 0;
+        double c=(p*normal)+d;
+        return (doublesequal(c,0));
     }
     bool ispointupper(const Vector3 &p)const
     {
-        return ((p*normal)+d)>0;
+        double c=(p*normal)+d;
+        return c>0;
     }
     bool ispointlower(const Vector3 &p)const
     {
-        return ((p*normal)+d)<0;
+        double c=(p*normal)+d;
+        return c<0;
     }
 };
 

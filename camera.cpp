@@ -21,7 +21,7 @@ void Camera::Move (const Vector3 &Direction)
     Position += Direction;
 }
 
-void Camera::RotateX (const GLfloat &Angle)
+void Camera::RotateX (const GLdouble &Angle)
 {
 
 	RotatedX += Angle;    
@@ -32,7 +32,7 @@ void Camera::RotateX (const GLfloat &Angle)
     Up = Vector3::crossproduct(View, RightVector);
 }
 
-void Camera::RotateY (const GLfloat &Angle)
+void Camera::RotateY (const GLdouble &Angle)
 {
 	RotatedY += Angle;
 	//Rotate viewdir around the up vector:
@@ -42,7 +42,7 @@ void Camera::RotateY (const GLfloat &Angle)
     RightVector = Vector3::crossproduct(View, Up)*-1;
 }
 
-void Camera::RotateZ(const GLfloat &Angle)
+void Camera::RotateZ(const GLdouble &Angle)
 {
     RotatedZ += Angle;
     //Rotate viewdir around the right vector:
@@ -64,22 +64,22 @@ void Camera::Render() const
 
 }
 
-void Camera::MoveForward(const GLfloat &Distance )
+void Camera::MoveForward(const GLdouble &Distance )
 {
     Position += (View*Distance);
 }
 
-void Camera::MoveRight (const GLfloat &Distance )
+void Camera::MoveRight (const GLdouble &Distance )
 {
     Position += (RightVector*Distance);
 }
 
-void Camera::MoveUpward(const GLfloat &Distance )
+void Camera::MoveUpward(const GLdouble &Distance )
 {
     Position += (Up*Distance);
 }
 
-void Camera::SetRotateX(const GLfloat &Angle)
+void Camera::SetRotateX(const GLdouble &Angle)
 {
 
     View = Vector3( 0.0f, 0.0f, -1.0f);

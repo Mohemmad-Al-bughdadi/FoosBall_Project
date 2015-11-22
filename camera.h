@@ -25,7 +25,7 @@ public:
     Vector3 Up;
 
 
-	float RotatedX, RotatedY, RotatedZ;
+	double RotatedX, RotatedY, RotatedZ;
 
 public:
     Camera(const Vector3 &Start);				//inits the values (Position: (0|0|0) Target: (0|0|-1) )
@@ -33,15 +33,15 @@ public:
 							//Note: You should call glLoadIdentity before using Render
 
     void Move (const Vector3 &Direction );
-    void RotateX (const GLfloat &Angle );
-    void RotateY (const GLfloat &Angle );
-    void RotateZ (const GLfloat &Angle );
+    void RotateX (const GLdouble &Angle );
+    void RotateY (const GLdouble &Angle );
+    void RotateZ (const GLdouble &Angle );
 
-    void MoveForward (const GLfloat &Distance );
-    void MoveUpward (const GLfloat &Distance );
-    void MoveRight (const GLfloat &Distance );
+    void MoveForward (const GLdouble &Distance );
+    void MoveUpward (const GLdouble &Distance );
+    void MoveRight (const GLdouble &Distance );
 
-    void SetRotateX(const GLfloat &Angle);
+    void SetRotateX(const GLdouble &Angle);
 
 
 };

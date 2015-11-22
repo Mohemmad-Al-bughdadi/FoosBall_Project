@@ -1,6 +1,6 @@
 #include "ball.h"
-map<BodyPair,float> Ball::RollingFrictionCoffs;
-float Ball::getRadius() const
+map<BodyPair,double> Ball::RollingFrictionCoffs;
+double Ball::getRadius() const
 {
     return radius;
 }
@@ -9,8 +9,8 @@ float Ball::getRadius() const
 
 
 
-Ball::Ball(const float &theradius,const Vector3 &origin,const float &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o)
-:Body(mass, origin,rot, fr, tr, o)
+Ball::Ball(const double &theradius,const Vector3 &origin,const double &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o)
+    :Body(mass, origin, rot,fr,tr,o)
     ,radius(theradius), texture_id(theTexure)
 {
     inertia=0.4f*mass*theradius*theradius;
@@ -18,29 +18,35 @@ Ball::Ball(const float &theradius,const Vector3 &origin,const float &mass,const 
 
 
 
-void Ball::draw(const Vector3 &color)
+void Ball::draw(const Vector3 &color) const
 {
 	glPushMatrix();
-    glColor3fv(color.toArray());
-	/*if (!origin)
-	{
-		Vector3 b = rotationaxis.getBegin();
-		Vector3 e = rotationaxis.getEnd() - b;
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-		glTranslatef(b.X(), b.Y(), b.Z());
+    glColor3dv(color.toArray());
 
-		glRotatef(thetarotate * 180 / PI, e.X(), e.Y(), e.Z());
-		glTranslatef(-b.X(), -b.Y(), -b.Z());
+    Vector3 b = rotationaxis.getBegin();
+    Vector3 e = rotationaxis.getEnd() - b;
+    glTranslated(b.X(), b.Y(), b.Z());
+    glRotated(thetarotate * 180 / PI, e.X(), e.Y(), e.Z());
+    glTranslated(-b.X(), -b.Y(), -b.Z());
+    glTranslated(centerofmass.X(), centerofmass.Y(), centerofmass.Z());
 
-	} */
-	glTranslatef(centerofmass.X(), centerofmass.Y(), centerofmass.Z());
-	GLUquadric * gq =  gluNewQuadric();
-	gluQuadricNormals(gq, GLU_SMOOTH);
-	gluQuadricTexture(gq, GL_TRUE);
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, texture_id);
-	gluSphere(gq, radius, radius * 30, radius * 20);
-	glDisable(GL_TEXTURE_2D);
+    glColor3dv(color.toArray());
+
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D,texture_id);
+
+    glutSolidSphere(radius,40,40);
+
+    glPopAttrib();
     glPopMatrix();    
 }
 

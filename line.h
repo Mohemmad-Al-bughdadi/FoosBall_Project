@@ -25,7 +25,7 @@ public:
     {
         return (begin==end);
     }
-	float distancefrom(const Vector3 &v)const
+	double distancefrom(const Vector3 &v)const
 	{
 		return Vector3::crossproduct(end - begin, begin - v).length() / (end - begin).length();
 	}
@@ -58,9 +58,9 @@ public:
 	}        
     bool ispointin(const Vector3 &p)const
     {
-        float a=orentation.X(),b=orentation.Y(),c=orentation.Z();
-        float x0=begin.X(),y0=begin.Y(),z0=begin.Z();
-        float x=p.X(),y=p.Y(),z=p.Z();
+        double a=orentation.X(),b=orentation.Y(),c=orentation.Z();
+        double x0=begin.X(),y0=begin.Y(),z0=begin.Z();
+        double x=p.X(),y=p.Y(),z=p.Z();
         if(roundf(a)==0)
         {
             if(x!=x0)

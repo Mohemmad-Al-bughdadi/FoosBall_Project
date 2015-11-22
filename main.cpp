@@ -4,13 +4,24 @@
 #include "player.h"
 #include "textures.h"
 
-vector<char*> v;
+string normal[] = { "behind.bmp", "front.bmp", "front.bmp", "front.bmp", "front.bmp", "front.bmp"};
+string ground[] ={ "behind.bmp", "front.bmp", "front.bmp", "front.bmp", "front.bmp","ground.bmp"};
+
+GLuint* GetTextIds(string texture_names[6])
+{
+    GLuint *arr = new GLuint[6];
+    for (int i = 0; i < 6; i++)
+    {
+        arr[i] = LoadTexture(texture_names[i].c_str());
+    }
+    return arr;
+}
+
 Wall * SkyBox;
 bool pressed[4]={false};
 bool enemypressed[4] = {false };
 #define HAND_POWER 1000.0f
 #define ROUND_POWER HAND_POWER*100
-#define RC_WALL 0.2f
 #define SFC_HANDLE 0.2f
 #define SFC_PLAYER 0.15f
 #define SFC_BALL 0.2f
@@ -19,14 +30,15 @@ bool enemypressed[4] = {false };
 #define RC_HANDEL 0.1f
 #define RC_PLAYER 0.2f
 #define RC_BALL 0.2f
-#define RC_GROUND 0.05f
+#define RC_GROUND 0.7f
+#define RC_WALL 0.8f
 
 #define ROFC_HANDLE 0.2f
 #define ROFC_PLAYER 0.2f
 #define ROFC_BALL 0.2f
 #define ROFC_GROUND 0.5f
 #define ROFC_WALLS 0.3f
-#define BALL_MASS 0.011f
+#define BALL_MASS 0.11f
 
 bool Keys[256] = {false};
 Vector3 x;
@@ -65,18 +77,19 @@ Wall *EnemyGoal;
 
 Handle *Hand;
 int elapsedtime=0;
-float deltatime;
-float oldtime;
-float newtime;
+double handleradius = 0.4f;
+double deltatime;
+double oldtime;
+double newtime;
 const Vector3 handcolor(1,0,0);
 const Vector3 playercolor(0, 0, 1);
 const Vector3 enemyplayercolor(1, 0, 0);
-Force ballforce(Vector3(0.5,-1,-0.5),BALL_MASS*gravity);
+Force ballforce(Vector3(0,-1,0),BALL_MASS*gravity);
 Force handleforces[8]={Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0)};
 /* GLUT callback Handlers */
 void resize(int width, int height)
 {
-    const float ar = (float) width / (float) height;
+    const double ar = (double) width / (double) height;
     glViewport(0, 0, width, height);    
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -84,7 +97,6 @@ void resize(int width, int height)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(),StartPoint.X(),StartPoint.Y(),StartPoint.Z(), 0, 1, 0);
-
 }
 void handlephysics()
 {    
@@ -92,19 +104,13 @@ void handlephysics()
         Ground->collidewithball(*ball,ballforce);
         Backward_side_1->collidewithball(*ball,ballforce);
         Backward_side_2->collidewithball(*ball,ballforce);
-        
-		Forward_side_1->collidewithball(*ball,ballforce);
+        Forward_side_1->collidewithball(*ball,ballforce);
         Forward_side_2->collidewithball(*ball,ballforce);
-        
-		Left_side->collidewithball(*ball,ballforce);
+        Left_side->collidewithball(*ball,ballforce);
         Right_side->collidewithball(*ball,ballforce);
-        
-		Up_forward->collidewithball(*ball,ballforce);
+        Up_forward->collidewithball(*ball,ballforce);
         Up_backward->collidewithball(*ball,ballforce);
-		
 		FeetGround->collidewithball(*ball, ballforce);
-
-
         goalkeepers->collidewithball(*ball,ballforce);
         defensers->collidewithball(*ball,ballforce);
         miders->collidewithball(*ball,ballforce);
@@ -169,15 +175,15 @@ void Keyboard_Press(void)
 	{
 		if (enemypressed[0])
 			enemypressed[0] = false;
-		else
-		enemypressed[0] = true;//attack
+        else
+            enemypressed[0] = true;//attack
 	}
 	if (Keys[',']||Keys['<'])//1
 	{
 		if (enemypressed[1])
 			enemypressed[1] = false;
 		else
-		enemypressed[1] = true;//middler
+		enemypressed[1] = true;//midder
 
 	}
 	if (Keys['.'] || Keys['>'])
@@ -185,7 +191,7 @@ void Keyboard_Press(void)
 		if (enemypressed[2])
 			enemypressed[2] = false;
 		else
-		enemypressed[2] = true;//def
+		enemypressed[2] = true;//dif
 
 	}
 	if (Keys['/']||Keys['?'])
@@ -193,7 +199,7 @@ void Keyboard_Press(void)
 		if (enemypressed[3])
 			enemypressed[3] = false;
 		else
-		enemypressed[3] = true;//goalkeeper
+		enemypressed[3] = true;//goalkepper
 	}
 	if (Keys[48])//0
 	{
@@ -212,34 +218,24 @@ void Keyboard_Press(void)
 		}
 		if (enemypressed[3])
 		{
-			//e goal keepers  
+			//e goal keppers  
 		}
-	}
-	if (Keys['h'])
-
-	{
-		cout <<"ball    "<< ball->getcenterofmass().X() << "     " << ball->getcenterofmass().Y() << "       " << ball->getcenterofmass().Z()<<endl;
-		for (int i = 0; i < miders->numberofplayers(); i++)
-		{
-			miders->getplayer(i)->print();
-		}
-
-	}
+	}	
 	if (Keys['o'])
 	{
-		goalkeepers->applytorque(Vector3((goalkeepers->getmass()+goalkeepers->getplayer(0)->getmass()+goalkeepers->getball(0)->getmass()*2)*ROUND_POWER , 0, 0), false);
+        attackers->applytorque(Vector3(ROUND_POWER , 0, 0), false);
 	}
 	if (Keys['p'])
 	{
-		handleforces[0] = Force(Vector3(-1, 0, 0), gravity);
-		goalkeepers->applyforce(handleforces[0], false);
+        handleforces[2] = Force(Vector3(-1, 0, 0), gravity);
+        miders->applyforce(handleforces[2], false);
 	}
 	if (Keys['z'] || Keys['Z'])
 	{
 		if (pressed[3])
 			pressed[3] = false;
-		else
-		pressed[3] = true;
+        else
+            pressed[3] = true;
 	}
 	if (Keys['x'] || Keys['X'])
 	{
@@ -267,26 +263,26 @@ void Keyboard_Press(void)
 		//apply torque
 		if (pressed[0])
 		{
-			attackers->applytorque(Vector3((attackers->getmass() + attackers->getplayer(0)->getmass() * 3 + attackers->getball(0)->getmass() * 2)*HAND_POWER, 0, 0), false);
+            attackers->applytorque(Vector3((attackers->getmass() + attackers->getplayer(0)->getmass() * 3 + attackers->getball(0)->getmass() * 2)*HAND_POWER, 0, 0), false);
 
 		  //attackers
 		}
 		if (pressed[1])
 		{
-			miders->applytorque(Vector3((miders->getmass() + miders->getplayer(0)->getmass() * 5 + miders->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
+            miders->applytorque(Vector3((miders->getmass() + miders->getplayer(0)->getmass() * 5 + miders->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
 
 		   //mider
 		}
 		if (pressed[2])
 		{
 			//dif
-			defensers->applytorque(Vector3((defensers->getmass() + defensers->getplayer(0)->getmass() * 2 + defensers->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
+            defensers->applytorque(Vector3((defensers->getmass() + defensers->getplayer(0)->getmass() * 2 + defensers->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
 
 		}
 		if (pressed[3])
 		{
-			//goal keeper
-			goalkeepers->applytorque(Vector3((goalkeepers->getmass() + goalkeepers->getplayer(0)->getmass() + goalkeepers->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
+			//goal kepper
+            goalkeepers->applytorque(Vector3((goalkeepers->getmass() + goalkeepers->getplayer(0)->getmass() + goalkeepers->getball(0)->getmass() * 2) * HAND_POWER, 0, 0), false);
 
 		}
 	}
@@ -307,7 +303,7 @@ void Keyboard_Press(void)
 		}
 		if (enemypressed[3])
 		{
-			//e goal keepers  
+			//e goal keppers  
 		}
 
 	}
@@ -329,7 +325,7 @@ void Keyboard_Press(void)
 		}
 		if (enemypressed[3])
 		{
-			//e goal keepers  
+			//e goal keppers  
 		}
 
 	}
@@ -351,7 +347,7 @@ void Keyboard_Press(void)
 		}
 		if (pressed[3])
 		{
-			//goal keeper
+			//goal kepper
 
 		}
 
@@ -374,7 +370,7 @@ void Keyboard_Press(void)
 		}
 		if (pressed[3])
 		{
-			//goal keeper
+			//goal kepper
 
 		}
 
@@ -437,15 +433,9 @@ void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-	gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(), ball->getcenterofmass().X(), ball->getcenterofmass().Y(), ball->getcenterofmass().Z(), 0, 1, 0);
-	//gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(), StartPoint.X(), StartPoint.Y(), StartPoint.Z(), 0, 1, 0);
+	//gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(), ball->getcenterofmass().X(), ball->getcenterofmass().Y(), ball->getcenterofmass().Z(), 0, 1, 0);
+	gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(), StartPoint.X(), StartPoint.Y(), StartPoint.Z(), 0, 1, 0);
 
-    /*cout<<'\n';
-    ball->print();
-
-    cout<<"\nmiders PLayers\n";
-    miders->print();
-    cout<<'\n';		  */
     handlephysics();
 	SkyBox->draw(Vector3(1, 1, 1));
     ball->draw(Vector3(1,1,1));
@@ -465,6 +455,7 @@ void display()
 	forth_leg->draw(Vector3(1, 1, 1));
 	MyGoal->draw(Vector3(0, 0, 0));
 	EnemyGoal->draw(Vector3(0, 0, 0));
+
 	Keyboard_Press();
 
 
@@ -487,7 +478,7 @@ void idle(void)
 }
 void init()
 {
-    glClearColor(0, 0, 0, 0);
+    glClearColor(1, 1, 1, 1);
 
 
 
@@ -497,58 +488,29 @@ void init()
 	glEnable(GL_LIGHTING);
 
     glEnable(GL_LIGHT0);
-	const GLfloat light_ambient[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-	const GLfloat light_diffuse[] = { 1.0f, 1,1, 1.0f };
-	const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	const GLfloat light_position[] = { 0.0f, 30, 0.0f, 1.0f };	
-	const GLfloat light_shininess[] = { 50.0f };
-	const GLfloat light_emissive[] = { 1, -1, 1, 0 };
+    const GLfloat light_ambient[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+    const GLfloat light_diffuse[] = { 1.0f, 1,1, 1.0f };
+    const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    const GLfloat light_position[] = { 0.0f, 30, 0.0f, 1.0f };
+    const GLfloat light_shininess[] = { 50.0f };
+    const GLfloat light_emissive[] = { 1, -1, 1, 0 };
 
 	glEnable(GL_COLOR_MATERIAL);
 
     glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glLightfv(GL_LIGHT0, GL_EMISSION, light_emissive);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_EMISSION, light_emissive);
 
-	glMaterialfv(GL_FRONT, GL_SPECULAR, light_specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, light_shininess);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, light_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, light_shininess);
 }
-GLuint* GetTextIds(vector<char*> texture_names)
+void fill_skybox()
 {
-	
-
-	GLuint *arr = new GLuint(texture_names.size());
-	for (unsigned int i = 0; i < texture_names.size(); i++)
-	{
-		char * c = const_cast<char*>(texture_names[i]);
-		arr[i] = LoadTexture(texture_names[i]);
-	}
-	return arr;
-}
-void draw_skybox()
-{
-
-
-	v.clear();
-	v.push_back("Sground.bmp");
-	v.push_back("Sground.bmp");
-	v.push_back("Sground.bmp");
-	v.push_back("Sground.bmp");
-	v.push_back("Sground.bmp");
-	v.push_back("Sground.bmp");
-	
-	//v.push_back("Sleft.bmp");
-	//v.push_back("Sfront.bmp");
-	//v.push_back("Sright.bmp");
-	//v.push_back("Sback.bmp");
-	//v.push_back("Sup.bmp");
-
-	SkyBox = new Wall(1000, 1000, 1000, 1, StartPoint, Line(Vector3(), Vector3()), false, Vector3(), NULL, GetTextIds(v));
-	FeetGround = new Wall(1000, 1, 1000, 100, StartPoint - Vector3(0, TABLE_HEIGHT / 2 + LEG_HEIGHT, 0), Line(Vector3(), Vector3()), false, Vector3(), 0, GetTextIds(v));
-
-
+    string textures[6]={"Sground.bmp","Sleft.bmp","Sfront.bmp","Sright.bmp","Sback.bmp","Sup.bmp"};
+    SkyBox = new Wall(1000, 1000, 1000, 0, StartPoint, Line(Vector3(), Vector3()), false, Vector3(), 0, GetTextIds(textures));
+    FeetGround = new Wall(1000, 1, 1000, 0, StartPoint - Vector3(0, LEG_HEIGHT+0.5f, 0), Line(Vector3(), Vector3()), false, Vector3(), 0, GetTextIds(textures));
 }
 /* Program entry point */
 int main(int argc, char *argv[])
@@ -558,64 +520,56 @@ int main(int argc, char *argv[])
     glutInitWindowPosition(300,200);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutCreateWindow("FoosBall");
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
-	
-	glutReshapeFunc(resize);
-	glutDisplayFunc(display);
-	glutKeyboardFunc(KeyboardDown);
-	glutKeyboardUpFunc(KeyboardUp);
-	glutSpecialFunc(keyboardSpecialDown);
-	glutSpecialUpFunc(keyboardSpecialUp);
-	glutIdleFunc(idle);
-	init();
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
+    glutReshapeFunc(resize);
+    glutDisplayFunc(display);
+    glutKeyboardFunc(KeyboardDown);
+    glutKeyboardUpFunc(KeyboardUp);
+    glutSpecialFunc(keyboardSpecialDown);
+    glutSpecialUpFunc(keyboardSpecialUp);
+    glutIdleFunc(idle);
+    init();
 
 	glutIgnoreKeyRepeat(true);
 
-	v.clear();
-	v.push_back("behind.bmp");
-	v.push_back("front.bmp");
-	v.push_back("front.bmp");
-	v.push_back("front.bmp");
-	v.push_back("front.bmp");
-	v.push_back("ground.bmp");
-	texture_ids =GetTextIds(v);
+    texture_ids =GetTextIds(ground);
 	
-    Ground = new Wall(TABLE_WIDTH,1,TABLE_DIPTH, 30, Vector3(StartPoint.X(), StartPoint.Y() - HALF_HEIGHT + 0.5f, StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-	v.pop_back();
-	v.push_back("front.bmp");
-	texture_ids = GetTextIds(v);
-    Right_side = new Wall(WALL_THICKNESS, TABLE_HEIGHT, TABLE_DIPTH + WALL_THICKNESS/2, 40, Vector3(StartPoint.X() + HALF_WIDTH + 0.5f, StartPoint.Y(), StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    Left_side = new Wall(WALL_THICKNESS, TABLE_HEIGHT, TABLE_DIPTH + WALL_THICKNESS/2, 40, Vector3(StartPoint.X() - HALF_WIDTH - 0.5f, StartPoint.Y(), StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    Forward_side_1 = new Wall(BOARD_WIDTH, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X() - (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y(), StartPoint.Z() + HALF_DIPTH + 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    Forward_side_2 = new Wall(BOARD_WIDTH, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X() + (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y(), StartPoint.Z() + HALF_DIPTH + 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    MyGoal = new Wall(GOAL_WIDTH, GOAL_HEIGHT, WALL_THICKNESS, 100, Vector3(StartPoint.X(), StartPoint.Y(), StartPoint.Z() + HALF_DIPTH + 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, NULL);
-    Up_forward = new Wall(TABLE_WIDTH + WALL_THICKNESS, TABLE_HEIGHT / WALL_THICKNESS, WALL_THICKNESS, 10, Vector3(StartPoint.X(), StartPoint.Y() + TABLE_HEIGHT / 2 + (TABLE_HEIGHT / WALL_THICKNESS) / 2, StartPoint.Z() + HALF_DIPTH + 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    Backward_side_1 = new Wall(BOARD_WIDTH, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X() - (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y(), StartPoint.Z() - HALF_DIPTH - 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    Backward_side_2 = new Wall(BOARD_WIDTH, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X() + (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y(), StartPoint.Z() - HALF_DIPTH - 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    EnemyGoal = new Wall(GOAL_WIDTH, GOAL_HEIGHT, WALL_THICKNESS, 100, Vector3(StartPoint.X(), StartPoint.Y(), StartPoint.Z() - HALF_DIPTH - 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, NULL);
-    Up_backward = new Wall(TABLE_WIDTH + WALL_THICKNESS, TABLE_HEIGHT / WALL_THICKNESS, WALL_THICKNESS, 10, Vector3(StartPoint.X(), StartPoint.Y() + TABLE_HEIGHT / 2 + (TABLE_HEIGHT / WALL_THICKNESS) / 2, StartPoint.Z() - HALF_DIPTH - 0.5f),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Ground = new Wall(TABLE_WIDTH,1,TABLE_DIPTH, 30, Vector3(StartPoint.X(), StartPoint.Y(), StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
 
-	draw_skybox();
+    texture_ids = GetTextIds(normal);
+
+    Right_side = new Wall(WALL_THICKNESS, TABLE_HEIGHT, TABLE_DIPTH , 40, Vector3(StartPoint.X() + HALF_WIDTH, StartPoint.Y()+HALF_HEIGHT, StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Left_side = new Wall(WALL_THICKNESS, TABLE_HEIGHT, TABLE_DIPTH , 40, Vector3(StartPoint.X() - HALF_WIDTH , StartPoint.Y()+HALF_HEIGHT, StartPoint.Z()),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Forward_side_1 = new Wall(BOARD_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X()+HALF_WALL_THICKNESS - (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y()+HALF_HEIGHT, StartPoint.Z() + HALF_DIPTH-HALF_WALL_THICKNESS ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Forward_side_2 = new Wall(BOARD_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X() - HALF_WALL_THICKNESS  + (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y()+HALF_HEIGHT, StartPoint.Z() + HALF_DIPTH-HALF_WALL_THICKNESS ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    MyGoal = new Wall(GOAL_WIDTH-HALF_WALL_THICKNESS, GOAL_HEIGHT, WALL_THICKNESS, 0, Vector3(StartPoint.X(), StartPoint.Y()+HALF_GOAL_HEIGHT, StartPoint.Z() + HALF_DIPTH-HALF_WALL_THICKNESS ),Line(Vector3(),Vector3()),false,Vector3(),0, NULL);
+    Up_forward = new Wall(GOAL_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT -GOAL_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X(), StartPoint.Y() + HALF_HEIGHT+HALF_GOAL_HEIGHT, StartPoint.Z() + HALF_DIPTH-HALF_WALL_THICKNESS ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Backward_side_1 = new Wall(BOARD_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X()+HALF_WALL_THICKNESS  - (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y()+HALF_HEIGHT, StartPoint.Z() - HALF_DIPTH+HALF_WALL_THICKNESS ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    Backward_side_2 = new Wall(BOARD_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X()-HALF_WALL_THICKNESS  + (BOARD_WIDTH + GOAL_WIDTH) / 2, StartPoint.Y()+HALF_HEIGHT, StartPoint.Z() - HALF_DIPTH+HALF_WALL_THICKNESS  ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    EnemyGoal = new Wall(GOAL_WIDTH-HALF_WALL_THICKNESS, GOAL_HEIGHT, WALL_THICKNESS, 0, Vector3(StartPoint.X(), StartPoint.Y()+HALF_GOAL_HEIGHT, StartPoint.Z() - HALF_DIPTH+HALF_WALL_THICKNESS  ),Line(Vector3(),Vector3()),false,Vector3(),0, NULL);
+    Up_backward = new Wall(GOAL_WIDTH-HALF_WALL_THICKNESS, TABLE_HEIGHT -GOAL_HEIGHT, WALL_THICKNESS, 10, Vector3(StartPoint.X(), StartPoint.Y() + HALF_HEIGHT+HALF_GOAL_HEIGHT, StartPoint.Z() - HALF_DIPTH+HALF_WALL_THICKNESS  ),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+
+    fill_skybox();
 
 
 	
-    first_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_dipth, 5, Vector3(StartPoint.X() + HALF_WIDTH - LEG_WIDTH/2, StartPoint.Y() - LEG_HEIGHT / 2 - HALF_HEIGHT, StartPoint.Z() + HALF_DIPTH-LEG_dipth/2),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    second_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_dipth, 5, Vector3(StartPoint.X() - HALF_WIDTH + LEG_WIDTH / 2, StartPoint.Y() - LEG_HEIGHT / 2 - HALF_HEIGHT, StartPoint.Z() + HALF_DIPTH - LEG_dipth / 2),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    third_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_dipth, 5, Vector3(StartPoint.X() + HALF_WIDTH - LEG_WIDTH / 2, StartPoint.Y() - LEG_HEIGHT / 2 - HALF_HEIGHT, StartPoint.Z() - HALF_DIPTH + LEG_dipth / 2),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
-    forth_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_dipth, 5, Vector3(StartPoint.X() - HALF_WIDTH + LEG_WIDTH / 2, StartPoint.Y() - LEG_HEIGHT / 2 - HALF_HEIGHT, StartPoint.Z() - HALF_DIPTH + LEG_dipth / 2),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    first_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_DIPTH, 5, Right_side->getcenterofmass()+Vector3(-HALF_LEG_WIDTH,-HALF_HEIGHT-HALF_LEG_HEIGHT,HALF_DIPTH-HALF_LEG_DIPTH),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    second_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_DIPTH, 5, Right_side->getcenterofmass()+Vector3(-HALF_LEG_WIDTH,-HALF_HEIGHT-HALF_LEG_HEIGHT,-HALF_DIPTH+HALF_LEG_DIPTH),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    third_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_DIPTH, 5, Left_side->getcenterofmass()+Vector3(HALF_LEG_WIDTH,-HALF_HEIGHT-HALF_LEG_HEIGHT,HALF_DIPTH-HALF_LEG_DIPTH),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
+    forth_leg = new Wall(LEG_WIDTH, LEG_HEIGHT, LEG_DIPTH, 5, Left_side->getcenterofmass()+Vector3(HALF_LEG_WIDTH,-HALF_HEIGHT-HALF_LEG_HEIGHT,-HALF_DIPTH+HALF_LEG_DIPTH),Line(Vector3(),Vector3()),false,Vector3(),0, texture_ids);
 	
 	
-    goalkeepers = new Handle(Handle_Type::goalkeeper, 3.8, StartPoint + Vector3(0, 0, 7.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, 7.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, 7.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
-    enemygoalkeepers = new Handle(Handle_Type::enemygoalkeeper, 3.8,  StartPoint + Vector3(0, 0, -7.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, -7.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, -7.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
+    goalkeepers = new Handle(Handle_Type::goalkeeper, 3.8, StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 7.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 7.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, 7.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
+    enemygoalkeepers = new Handle(Handle_Type::goalkeeper, 3.8,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -7.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -7.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, -7.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
 
-    defensers = new Handle(Handle_Type::defenser, 5.4, StartPoint + Vector3(0, 0, 5.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, 5.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, 5.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
-    enemydefensers = new Handle(Handle_Type::enemydefenser, 5.4,  StartPoint + Vector3(0, 0, -5.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, -5.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, -5.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
+    defensers = new Handle(Handle_Type::defenser, 5.4, StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 5.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 5.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, 5.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
+    enemydefensers = new Handle(Handle_Type::defenser, 5.4,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -5.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -5.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, -5.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
 
-    attackers = new Handle(Handle_Type::attacker, 5.4,  StartPoint + Vector3(0, 0, -3.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, -3.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, -3.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
-    enemyattackers = new Handle(Handle_Type::enemyattacker, 5.4,  StartPoint + Vector3(0, 0, 3.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, 3.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, 3.0f*TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
+    attackers = new Handle(Handle_Type::attacker, 5.4,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -3.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -3.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, -3.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
+    enemyattackers = new Handle(Handle_Type::attacker, 5.4,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 3.0f*TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, 3.0f*TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, 3.0f*TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
 
-    miders = new Handle(Handle_Type::mider, 7,  StartPoint + Vector3(0, 0, TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
-    enemymiders = new Handle(Handle_Type::enemymider, 7,  StartPoint + Vector3(0, 0, -TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, 0, -TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, 0, -TABLE_DIPTH / 16.0f)), 0.4f,false,Vector3(1,0,0),0);
+    miders = new Handle(Handle_Type::mider, 7,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
+    enemymiders = new Handle(Handle_Type::mider, 7,  StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -TABLE_DIPTH / 16.0f), Line(StartPoint + Vector3(0, HALF_HEIGHT+handleradius, -TABLE_DIPTH / 16.0f), StartPoint + Vector3(1, HALF_HEIGHT+handleradius, -TABLE_DIPTH / 16.0f)), handleradius,false,Vector3(1,0,0),0);
 
     goalkeepers->fillconstants(Right_side);
     defensers->fillconstants(Right_side);
@@ -636,16 +590,15 @@ int main(int argc, char *argv[])
     enemydefensers->fillconstants(Left_side);
     enemyattackers->fillconstants(Left_side);
     enemymiders->fillconstants(Left_side);
-	ball = new Ball(1, Vector3(2, 0, 25), BALL_MASS, Line(Vector3(), Vector3()), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
-	ball->print();
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, goalkeepers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, enemygoalkeepers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, defensers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, enemydefensers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, attackers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, enemyattackers), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, miders), SFC_HANDLE));
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, enemymiders), SFC_HANDLE));
+    ball = new Ball(1, Vector3(6, 15, -18), BALL_MASS, Line(Vector3(4,15,-18), Vector3(6,15,-18)), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, goalkeepers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemygoalkeepers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, defensers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemydefensers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, attackers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemyattackers), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, miders), SFC_HANDLE));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemymiders), SFC_HANDLE));
 
 
 
@@ -654,7 +607,7 @@ int main(int argc, char *argv[])
     int n=goalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (goalkeepers->getplayer(i)->body)), SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (goalkeepers->getplayer(i)->body)), SFC_PLAYER));
 
     }
 
@@ -662,43 +615,43 @@ int main(int argc, char *argv[])
     n=enemygoalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemygoalkeepers->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemygoalkeepers->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=defensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(defensers->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(defensers->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=enemydefensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemydefensers->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemydefensers->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=attackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(attackers->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(attackers->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=enemyattackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemyattackers->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemyattackers->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=miders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(miders->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(miders->getplayer(i)->body)),SFC_PLAYER));
     }
 
     n=enemymiders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemymiders->getplayer(i)->body)),SFC_PLAYER));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemymiders->getplayer(i)->body)),SFC_PLAYER));
     }
 
 
@@ -706,311 +659,311 @@ int main(int argc, char *argv[])
     n=goalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(goalkeepers->getball(i))),SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(goalkeepers->getball(i))),SFC_BALL));
     }
 
     n=enemygoalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (enemygoalkeepers->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemygoalkeepers->getball(i))), SFC_BALL));
     }
 
     n=defensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (defensers->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (defensers->getball(i))), SFC_BALL));
     }
 
     n=enemydefensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (enemydefensers->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemydefensers->getball(i))), SFC_BALL));
     }
 
     n=attackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (attackers->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (attackers->getball(i))), SFC_BALL));
     }
 
     n=enemyattackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (enemyattackers->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemyattackers->getball(i))), SFC_BALL));
     }
 
     n=miders->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (miders->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (miders->getball(i))), SFC_BALL));
     }
 
     n=enemymiders->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (enemymiders->getball(i))), SFC_BALL));
+        Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemymiders->getball(i))), SFC_BALL));
     }
 
 
-	Body::StaticFrictionCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Ground), SFC_GROUND));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Ground), SFC_GROUND));
 
 
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Forward_side_1),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Forward_side_2),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Backward_side_1),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Backward_side_2),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Right_side),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Left_side),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Up_forward),SFC_WALLS));
-    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,Up_backward),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Forward_side_1),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Forward_side_2),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Backward_side_1),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Backward_side_2),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Right_side),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Left_side),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Up_forward),SFC_WALLS));
+    Body::StaticFrictionCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,Up_backward),SFC_WALLS));
 
 
 
 
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,goalkeepers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemygoalkeepers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,defensers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemydefensers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,attackers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemyattackers),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,miders),RC_HANDEL));
-    Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemymiders),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,goalkeepers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemygoalkeepers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,defensers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemydefensers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,attackers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemyattackers),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,miders),RC_HANDEL));
+    Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemymiders),RC_HANDEL));
 
 
     n=goalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,goalkeepers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,goalkeepers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=enemygoalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemygoalkeepers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemygoalkeepers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=defensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,defensers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,defensers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=enemydefensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemydefensers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemydefensers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=attackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,attackers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,attackers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=enemyattackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemyattackers->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemyattackers->getplayer(i)->body),RC_PLAYER));
     }
 
     n=miders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,miders->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,miders->getplayer(i)->body),RC_PLAYER));
     }
 
     n=enemymiders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,enemymiders->getplayer(i)->body),RC_PLAYER));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair(ball,enemymiders->getplayer(i)->body),RC_PLAYER));
     }
 
 
     n=goalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair(ball,(goalkeepers->getball(i))),RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(goalkeepers->getball(i))),RC_BALL));
     }
 
     n=enemygoalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, (enemygoalkeepers->getball(i))), RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemygoalkeepers->getball(i))), RC_BALL));
     }
 
     n=defensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (defensers->getball(i))), RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (defensers->getball(i))), RC_BALL));
     }
 
     n=enemydefensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-		Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair((ball), (enemydefensers->getball(i))), RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair((ball), (enemydefensers->getball(i))), RC_BALL));
     }
 
     n=attackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(attackers->getball(i))),RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(attackers->getball(i))),RC_BALL));
     }
 
     n=enemyattackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemyattackers->getball(i))),RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemyattackers->getball(i))),RC_BALL));
     }
 
     n=miders->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(miders->getball(i))),RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(miders->getball(i))),RC_BALL));
     }
 
     n=enemymiders->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Body::RestCoffeciants.insert(pair<BodyPair,float>(BodyPair((ball),(enemymiders->getball(i))),RC_BALL));
+        Body::RestCoffeciants.insert(pair<BodyPair,double>(BodyPair((ball),(enemymiders->getball(i))),RC_BALL));
     }
 
 
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Ground), RC_GROUND));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Ground), RC_GROUND));
 
 
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Forward_side_1), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Forward_side_2), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Backward_side_1), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Backward_side_2), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Right_side), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Left_side), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Up_forward), RC_WALL));
-	Body::RestCoffeciants.insert(pair<BodyPair, float>(BodyPair(ball, Up_backward), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Forward_side_1), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Forward_side_2), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Backward_side_1), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Backward_side_2), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Right_side), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Left_side), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Up_forward), RC_WALL));
+    Body::RestCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, Up_backward), RC_WALL));
 	
 
 
 
 
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,goalkeepers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemygoalkeepers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,defensers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemydefensers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,attackers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemyattackers),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,miders),ROFC_HANDLE));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemymiders),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,goalkeepers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemygoalkeepers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,defensers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemydefensers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,attackers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemyattackers),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,miders),ROFC_HANDLE));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemymiders),ROFC_HANDLE));
 
 
     n=goalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,goalkeepers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,goalkeepers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=enemygoalkeepers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemygoalkeepers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemygoalkeepers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=defensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,defensers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,defensers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=enemydefensers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemydefensers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemydefensers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=attackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,attackers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,attackers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=enemyattackers->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemyattackers->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemyattackers->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=miders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,miders->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,miders->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=enemymiders->numberofplayers();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,enemymiders->getplayer(i)->body),ROFC_PLAYER));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,enemymiders->getplayer(i)->body),ROFC_PLAYER));
     }
 
     n=goalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(goalkeepers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(goalkeepers->getball(i))),ROFC_BALL));
     }
 
     n=enemygoalkeepers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(enemygoalkeepers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(enemygoalkeepers->getball(i))),ROFC_BALL));
     }
 
     n=defensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(defensers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(defensers->getball(i))),ROFC_BALL));
     }
 
     n=enemydefensers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(enemydefensers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(enemydefensers->getball(i))),ROFC_BALL));
     }
 
     n=attackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(attackers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(attackers->getball(i))),ROFC_BALL));
     }
 
     n=enemyattackers->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(enemyattackers->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(enemyattackers->getball(i))),ROFC_BALL));
     }
 
     n=miders->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(miders->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(miders->getball(i))),ROFC_BALL));
     }
 
     n=enemymiders->numberofballs();
     for(int i=0;i<n;i++)
     {
-        Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair((ball),(enemymiders->getball(i))),ROFC_BALL));
+        Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair((ball),(enemymiders->getball(i))),ROFC_BALL));
     }
 
 
 
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Ground),ROFC_GROUND));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Ground),ROFC_GROUND));
 
 
 
-	Ball::RollingFrictionCoffs.insert(pair<BodyPair, float>(BodyPair(ball, Forward_side_1), ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Forward_side_2),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Backward_side_1),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Backward_side_2),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Right_side),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Left_side),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Up_forward),ROFC_WALLS));
-    Ball::RollingFrictionCoffs.insert(pair<BodyPair,float>(BodyPair(ball,Up_backward),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair, double>(BodyPair(ball, Forward_side_1), ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Forward_side_2),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Backward_side_1),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Backward_side_2),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Right_side),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Left_side),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Up_forward),ROFC_WALLS));
+    Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Up_backward),ROFC_WALLS));
 
 	
     glutMainLoop();
