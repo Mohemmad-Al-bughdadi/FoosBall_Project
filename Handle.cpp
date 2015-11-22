@@ -21,7 +21,7 @@ void DrawCylinder(double radius,double height,Vector3 center,Vector3 axis)
 {
     Vector3 pos=Vector3(0,0,height/2);
     double theta=Vector3::anglebetweeninradian(axis,Vector3(0,0,1));
-    pos.Rotate(Vector3(axis.Y(),axis.X(),0),theta);
+    pos.Rotate(Vector3(0,0,0),Vector3(axis.Y(),axis.X(),0),theta);
     center-=pos;
     glPushMatrix();
     glTranslatef(center.X(),center.Y(),center.Z());
