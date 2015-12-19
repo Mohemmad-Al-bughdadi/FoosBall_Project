@@ -48,7 +48,7 @@ private:
            return  players[i];
        }
        void proceedintime();
-       void collidewithball(Ball &b,const Force &ballforce)
+       void collidewithball(Ball &b,Force &ballforce)
        {
            Vector3 cen=b.getcenterofmass();
            double brad=b.getRadius();
@@ -88,7 +88,7 @@ private:
                players[i]->collidewithball(b,ballforce);
        }
        void fillconstants(Wall *w)const;
-       void collidewallwithballs(Wall &w, const Force &handle_force);
+       void collidewallwithballs(Wall &w,Force &handle_force);
        void applyforce(const Force &f, const bool &applyonorigin);
        void applytorque(const Force &f, const Vector3 &p, const bool &applyonorigin);
        void applytorque(const Vector3 &torque,const bool &applyonorigin);

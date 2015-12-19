@@ -31,7 +31,7 @@ void Player::proceedintime()
     body->proceedintime();
 }
 
-void Player::collidewithball(Ball &b, const Force &ballforce)
+void Player::collidewithball(Ball &b, Force &ballforce)
 {
 	body->collidewithball(b, ballforce);
 }

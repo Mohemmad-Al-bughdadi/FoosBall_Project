@@ -107,7 +107,7 @@ void Handle::fillconstants(Wall *w) const
     }
 }
 
-void Handle::collidewallwithballs(Wall &w,const Force &handle_force)
+void Handle::collidewallwithballs(Wall &w,Force &handle_force)
 {
     for (unsigned int i = 0; i<balls.size(); i++)
         w.collidewithball(*balls[i],handle_force);

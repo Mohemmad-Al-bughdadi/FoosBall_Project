@@ -112,20 +112,35 @@ public:
     {
         return width;
     }
-    void collidewithball(Ball &b,const Force &ballforce)
+    void collidewithball(Ball &b,Force &ballforce)
     {
        Vector3 *p;
        Quad q(*left);
        if((((p=up->collidewithball(b,q)))!=NULL)||((p=right->collidewithball(b,q))!=NULL)||((p=left->collidewithball(b,q))!=NULL)||((p=ground->collidewithball(b,q))!=NULL)||((p=front->collidewithball(b,q))!=NULL)||((p=back->collidewithball(b,q))!=NULL))
        {		 
            double e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
-           Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
-           Force J(v,v.length()/dt);
+           Force J;
+           Vector3 v=b.getvelocity()-velocity;
+           if(!v.iszero())
+           {
+              Plane plane=q.getplane();
+              v=v-plane.projectonplane(v);
+              v=v*((e+1)/((1/b.getmass())+(1/mass)));
+              if(Vector3::anglebetweeninradian(v,plane.getNormal())!=0)
+              {
+                  J.setOrentation(v);
+                  J.setStrength(v.length()/dt);
+              }
+           }
            Force friction(Vector3(),0);
-           v=-b.getvelocity(*p)+getvelocity(*p);
-		   v = Plane((b.getcenterofmass()-(*p)), *p).projectonplane(v);
-           friction.setOrentation(-v);
-           friction.setStrength(J.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
+           Force Normal;
+           v=b.getvelocity(*p)-getvelocity(*p);
+           Vector3 v1=v;
+           if(!v.iszero())
+           {
+               v = Plane((b.getcenterofmass()-(*p)), *p).projectonplane(v);
+               friction.setOrentation(-v);
+           }
            if((transition.iszero())||(Vector3::abscosbetween(ballforce.getOrentation(),transition)!=1))
            {
                Plane qp=q.getplane();
@@ -133,25 +148,33 @@ public:
                Vector3 ballorigin=b.getcenterofmass();
                if(((qp.isnormaldown())&&(qp.ispointupper(ballorigin)))||((!qp.isnormaldown())&&(qp.ispointlower(ballorigin))))
                        nor=-nor;
-               Force Normal(nor,ballforce.getStrength()*Vector3::abscosbetween(ballforce.getOrentation(),nor));
+               Normal=Force(nor,ballforce.getStrength()*Vector3::abscosbetween(ballforce.getOrentation(),nor));
                Force total(Normal-J);
                friction.setStrength(total.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
-               b.applyforce(total,true);
+               ballforce+=total;
            }
 		   else 
            {
                friction.setStrength(J.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
                applytorque(J+friction,*p,true);
-               b.applyforce(-J,true);
+               ballforce-=J;
            }
-           if(!friction.getOrentation().iszero())
+           if(!v.iszero())
            {
-               b.applytorque(-friction,*p,true);
+               friction.setStrength(friction.getStrength()*(*Ball::RollingFrictionCoffs.find(BodyPair(&b,this))).second/(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
+               b.applytorque(-friction.getStrength(),true);
+               ballforce+=friction;
            }
-           else
+           else if((v1.iszero())&&(!ballforce.iszero()))
            {
-			   if (!b.getrotationalvelocity().iszero())
-                   b.applytorque(-friction.getStrength()*(((*Ball::RollingFrictionCoffs.find(BodyPair(&b,this))).second)/(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second),true);
+               Force ballforceprojection(Plane((b.getcenterofmass()-(*p)),*p).projectonplane(ballforce.getOrentation()*ballforce.getStrength()));               
+               friction.setOrentation(-ballforceprojection.getOrentation());               
+               friction.setStrength(Normal.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
+               Force tot=ballforceprojection+friction;
+               if(Vector3::anglebetweeninradian(tot.getOrentation(),friction.getOrentation())==0)
+                   ballforce=Force();
+               else
+                   b.applytorque(friction,*p,true);
            }
        }
 	}

@@ -8,17 +8,32 @@ private :
     double strength;
     Vector3 orentation;
 public :
+    Force()
+        :strength(0),orentation(Vector3())
+    {
+
+    }
+
     Force(const Vector3 &v,const double &s)
         :strength(s),orentation(v)
     {
         orentation.Normalize();
     }
+    Force(const Vector3 &v)
+        :strength(v.length()),orentation(v)
+    {
+        orentation.Normalize();
+    }
+
     Force(const Force &f)
         :strength(f.strength),orentation(f.orentation)
     {
 
     }
-
+    bool iszero()const
+    {
+        return orentation.iszero()||(strength==0);
+    }
     Force operator -()const
     {
         return Force(-orentation,strength);
@@ -26,15 +41,15 @@ public :
 
     Force operator +(const Force &f)const
     {
-        Force tot(f.orentation+orentation,0);
-        tot.strength = sqrt(f.strength*f.strength + strength*strength + 2 * strength*f.strength*cos(Vector3::anglebetweeninradian(orentation, f.orentation)));
-        return tot;
+        Vector3 f1=orentation*strength;
+        Vector3 f2=f.orentation*f.strength;
+        return Force(f1+f2);
     }
     Force operator -(const Force &f)const
     {
-        Force tot(orentation-f.orentation,0);
-        tot.strength = sqrt(f.strength*f.strength + strength*strength - 2 * strength*f.strength*cos(Vector3::anglebetweeninradian(orentation, f.orentation)));
-        return tot;
+        Vector3 f1=orentation*strength;
+        Vector3 f2=f.orentation*f.strength;
+        return Force(f1-f2);
     }   
     Force &operator =(const Force &f)
     {

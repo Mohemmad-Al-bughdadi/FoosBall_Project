@@ -84,7 +84,8 @@ double newtime;
 const Vector3 handcolor(1,0,0);
 const Vector3 playercolor(0, 0, 1);
 const Vector3 enemyplayercolor(1, 0, 0);
-Force ballforce(Vector3(0,-1,0),BALL_MASS*gravity);
+Force ballweight(Vector3(0,-1,0),BALL_MASS*gravity);
+Force ballforce;
 Force handleforces[8]={Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0)};
 /* GLUT callback Handlers */
 void resize(int width, int height)
@@ -98,9 +99,11 @@ void resize(int width, int height)
     glLoadIdentity();
     gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(),StartPoint.X(),StartPoint.Y(),StartPoint.Z(), 0, 1, 0);
 }
+void Keyboard_Press();
 void handlephysics()
 {    
-        ball->applyforce(ballforce,false);
+    ballforce=ballweight;
+    Keyboard_Press();
         Ground->collidewithball(*ball,ballforce);
         Backward_side_1->collidewithball(*ball,ballforce);
         Backward_side_2->collidewithball(*ball,ballforce);
@@ -137,6 +140,8 @@ void handlephysics()
         enemydefensers->collidewallwithballs(*Left_side,handleforces[5]);
         enemymiders->collidewallwithballs(*Left_side,handleforces[6]);
         enemyattackers->collidewallwithballs(*Left_side,handleforces[7]);
+
+        ball->applyforce(ballforce,false);
 
 
         ball->proceedintime();
@@ -456,7 +461,6 @@ void display()
 	MyGoal->draw(Vector3(0, 0, 0));
 	EnemyGoal->draw(Vector3(0, 0, 0));
 
-	Keyboard_Press();
 
 
 	goalkeepers->draw(playercolor);

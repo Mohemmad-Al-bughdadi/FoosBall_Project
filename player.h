@@ -15,7 +15,7 @@ public:
     Force getforce(const Vector3 &contactpoint,const double &strength)const;
     void applyforce(const Force &f, const bool &b);
 
-	void collidewithball(Ball &b, const Force &ballforce);
+    void collidewithball(Ball &b, Force &ballforce);
     bool operator ==(const Body *b) const;
     void proceedintime();        
 

@@ -104,10 +104,13 @@ public:
             origin->applyforce(f,true);
         else
         {
-            Vector3 oren=f.getOrentation();
-            Vector3 force=Vector3::elementproduct(transition,oren)*f.getStrength();
-            Vector3 accleration=force/m;
-            velocity+=accleration*dt;
+            if(!f.iszero())
+            {
+                Vector3 oren=f.getOrentation();
+                Vector3 force=Vector3::elementproduct(transition,oren)*f.getStrength();
+                Vector3 accleration=force/m;
+                velocity+=accleration*dt;                    
+            }
         }
 
     }
@@ -160,12 +163,15 @@ public:
     }
     virtual void proceedintime()
     {        
-        centerofmass+=velocity*dt;
+        Vector3 deltan(velocity*dt);
+        centerofmass+=deltan;
         thetarotate+=rotationalvelocity.length()*dt;
         while(thetarotate<0)
 			thetarotate += TWOPI;
         while(thetarotate>TWOPI)
 			thetarotate -= TWOPI;
+        if(freetochangerotationaxis)
+            rotationaxis=Line(rotationaxis.getBegin()+deltan,rotationaxis.getEnd()+deltan);
     }
     Vector3 getvelocity(const Vector3 &p)const
     {
