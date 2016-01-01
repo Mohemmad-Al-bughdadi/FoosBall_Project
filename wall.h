@@ -13,6 +13,12 @@ private :
     Plane p;
     GLuint textid;
 public :       
+    void checknormal(const Vector3 &point)
+    {
+        if(p.ispointupper(point))
+            p.reverse();
+    }
+
     Quad(const Vector3 &v1,const Vector3 &v2,const Vector3 &v3,const Vector3 &v4,const GLuint &texture)
 		:p1(v1), p2(v2), p3(v3), p4(v4), p(Plane(p1, p2, p3)), textid(texture)
     {
@@ -87,6 +93,7 @@ class Wall : public Body
 {    
 private:
     const double dipth, width , height;
+    void checknormals();
 public:
 	Quad *left, *right, *front, *back, *ground, *up;
 
@@ -148,7 +155,9 @@ public:
                Vector3 ballorigin=b.getcenterofmass();
                if(((qp.isnormaldown())&&(qp.ispointupper(ballorigin)))||((!qp.isnormaldown())&&(qp.ispointlower(ballorigin))))
                        nor=-nor;
-               Normal=Force(nor,ballforce.getStrength()*Vector3::abscosbetween(ballforce.getOrentation(),nor));
+               double theta=Vector3::cosbetween(ballforce.getOrentation(),nor);
+               if(theta<0)
+                   Normal=Force(nor,ballforce.getStrength()*fabs(theta));
                Force total(Normal-J);
                friction.setStrength(total.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
                ballforce+=total;

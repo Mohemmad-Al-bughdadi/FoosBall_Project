@@ -86,7 +86,7 @@ const Vector3 playercolor(0, 0, 1);
 const Vector3 enemyplayercolor(1, 0, 0);
 Force ballweight(Vector3(0,-1,0),BALL_MASS*gravity);
 Force ballforce;
-Force handleforces[8]={Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0),Force(Vector3(0,-1,0),0)};
+Force handleforces[8];
 /* GLUT callback Handlers */
 void resize(int width, int height)
 {
@@ -100,9 +100,16 @@ void resize(int width, int height)
     gluLookAt(camera.Position.X(), camera.Position.Y(), camera.Position.Z(),StartPoint.X(),StartPoint.Y(),StartPoint.Z(), 0, 1, 0);
 }
 void Keyboard_Press();
+void initialize_handleforces()
+{
+    for(int i=0;i<8;i++)
+        handleforces[i]=Force(Vector3(0,0,0),0);
+}
+
 void handlephysics()
 {    
     ballforce=ballweight;
+    initialize_handleforces();
     Keyboard_Press();
         Ground->collidewithball(*ball,ballforce);
         Backward_side_1->collidewithball(*ball,ballforce);
@@ -141,8 +148,18 @@ void handlephysics()
         enemymiders->collidewallwithballs(*Left_side,handleforces[6]);
         enemyattackers->collidewallwithballs(*Left_side,handleforces[7]);
 
-        ball->applyforce(ballforce,false);
+    miders->collidewallwithballs(*Right_side,handleforces[2]);
+    miders->collidewallwithballs(*Left_side,handleforces[2]);
+        goalkeepers->applyforce(handleforces[0],false);
+        defensers->applyforce(handleforces[1],false);
+        miders->applyforce(handleforces[2],false);
+        attackers->applyforce(handleforces[3],false);
+        enemygoalkeepers->applyforce(handleforces[4],false);
+        enemydefensers->applyforce(handleforces[5],false);
+        enemymiders->applyforce(handleforces[6],false);
+        enemyattackers->applyforce(handleforces[7],false);
 
+        //ball->applyforce(ballforce,false);
 
         ball->proceedintime();
         defensers->proceedintime();
@@ -232,8 +249,7 @@ void Keyboard_Press(void)
 	}
 	if (Keys['p'])
 	{
-        handleforces[2] = Force(Vector3(-1, 0, 0), gravity);
-        miders->applyforce(handleforces[2], false);
+         handleforces[2] += Force(Vector3(-1, 0, 0), 4);
 	}
 	if (Keys['z'] || Keys['Z'])
 	{
@@ -969,7 +985,7 @@ int main(int argc, char *argv[])
     Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Up_forward),ROFC_WALLS));
     Ball::RollingFrictionCoffs.insert(pair<BodyPair,double>(BodyPair(ball,Up_backward),ROFC_WALLS));
 
-	
+
     glutMainLoop();
     return EXIT_SUCCESS;
 }

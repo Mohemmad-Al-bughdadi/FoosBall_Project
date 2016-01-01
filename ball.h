@@ -37,7 +37,7 @@ public:
     Vector3 *collidewithball(const Plane &p)const
     {
         Vector3 ballorigin=centerofmass;
-        double dist=p.distancefrom(ballorigin);
+        double dist=p.distancefrom(ballorigin);       
         if(dist<=radius)
         {           
             Vector3 nor=p.getNormal();            

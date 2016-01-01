@@ -42,6 +42,12 @@ public:
     {
         return referencepoint;
     }
+    void reverse()
+    {
+        normal=-normal;
+        d=-d;
+    }
+
     double getD() const
     {
         return d;

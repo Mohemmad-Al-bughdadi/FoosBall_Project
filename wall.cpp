@@ -1,6 +1,16 @@
 #include "wall.h"
 
 
+void Wall::checknormals()
+{
+    ground->checknormal(centerofmass);
+    left->checknormal(centerofmass);
+    front->checknormal(centerofmass);
+    right->checknormal(centerofmass);
+    back->checknormal(centerofmass);
+    up->checknormal(centerofmass);
+}
+
 Wall::Wall(const double &thewidth, const double &theheight, const double &thedipth, const double &themass, Vector3 thecenter,const Line &rot,const bool &fr,const Vector3 &frt,Body *o, GLuint *tids)
 :Body(themass,thecenter, rot, fr, frt, o), dipth(thedipth), width(thewidth), height(theheight)
 {
@@ -34,6 +44,8 @@ up = new	Quad(thecenter + Vector3(-width / 2, +height / 2, -dipth / 2),
 	thecenter + Vector3(-width / 2, +height / 2, +dipth / 2),
 	thecenter + Vector3(+width / 2, +height / 2, +dipth / 2),
 	thecenter + Vector3(+width / 2, +height / 2, -dipth / 2), tids != NULL ? tids[5] : 0);
+
+    checknormals();
 
 }
 

@@ -157,7 +157,11 @@ public:
     }
     static double abscosbetween(const Vector3 &v1,const Vector3 &v2)
     {													
-		return fabs((v1*v2) / (v1.length()*v2.length()));
+        return fabs(cosbetween(v1,v2));
+    }
+    static double cosbetween(const Vector3 &v1,const Vector3 &v2)
+    {
+        return (v1*v2) / (v1.length()*v2.length());
     }
 
     void Translate(const Vector3 &v)
