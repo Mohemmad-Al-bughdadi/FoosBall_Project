@@ -61,15 +61,15 @@ public:
         double a=orentation.X(),b=orentation.Y(),c=orentation.Z();
         double x0=begin.X(),y0=begin.Y(),z0=begin.Z();
         double x=p.X(),y=p.Y(),z=p.Z();
-        if(roundf(a)==0)
+        if(a==0)
         {
             if(x!=x0)
                 return false;
-            else if(roundf(b)==0)
+            else if(b==0)
             {
                 if(y!=y0)
                     return false;
-                else if(roundf(c)==0)
+                else if(c==0)
                 {
                     if(z!=z0)
                         return false;
@@ -78,7 +78,7 @@ public:
             }
             else
             {
-                if(roundf(c)==0)
+                if(c==0)
                 {
                     if(z!=z0)
                         return false;
@@ -92,11 +92,11 @@ public:
         }
         else
         {
-            if(roundf(b)==0)
+            if(b==0)
             {
                 if(y!=y0)
                     return false;
-                else if(roundf(c)==0)
+                else if(c==0)
                 {
                     if(z!=z0)
                         return false;
@@ -106,7 +106,7 @@ public:
             }
             else
             {
-                if(roundf(c)==0)
+                if(c==0)
                 {
                     if(z!=z0)
                         return false;
@@ -119,18 +119,18 @@ public:
             }
         }
     }
-	/*static bool isperpendicular(const Line &l1,const Line &l2)
+   /* static bool isperpendicular(const Line &l1,const Line &l2)
 	{
 	return Vector3::isperpendicular(l1.getOrentiation(),l2.getOrentiation());
-	}
+    }*/
 	static bool isparallel(const Line &l1,const Line &l2)
-	{
-	return Vector3::isparallel(l1.getOrentiation(),l2.getOrentiation());
+    {
+        return Vector3::isparallel(l1.getOrentiation(),l2.getOrentiation());
 	}
-	static Vector3 *intersect(const Line &l1,const Line &l2)
-	{
-
-	}*/
+    static bool intersect(const Line &l1,const Line &l2)
+	{      
+        return (Vector3::crossproduct(l1.getOrentiation(),l2.getOrentiation())*(l1.getBegin()-l2.getBegin()))==0;
+    }
 };
 
 

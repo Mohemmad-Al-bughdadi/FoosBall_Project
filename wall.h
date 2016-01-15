@@ -150,17 +150,27 @@ public:
            }
            if((transition.iszero())||(Vector3::abscosbetween(ballforce.getOrentation(),transition)!=1))
            {
-               Plane qp=q.getplane();
-               Vector3 nor=qp.getNormal();
-               Vector3 ballorigin=b.getcenterofmass();
-               if(((qp.isnormaldown())&&(qp.ispointupper(ballorigin)))||((!qp.isnormaldown())&&(qp.ispointlower(ballorigin))))
+               Line line(*p,(*p)+ballforce.getOrentation());
+               if(Line::isparallel(line,rotationaxis)||Line::intersect(line,rotationaxis))
+               {
+                   Plane qp=q.getplane();
+                   Vector3 nor=qp.getNormal();
+                   Vector3 ballorigin=b.getcenterofmass();
+                   if(((qp.isnormaldown())&&(qp.ispointupper(ballorigin)))||((!qp.isnormaldown())&&(qp.ispointlower(ballorigin))))
                        nor=-nor;
-               double theta=Vector3::cosbetween(ballforce.getOrentation(),nor);
-               if(theta<0)
-                   Normal=Force(nor,ballforce.getStrength()*fabs(theta));
-               Force total(Normal-J);
-               friction.setStrength(total.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
-               ballforce+=total;
+                   double theta=Vector3::cosbetween(ballforce.getOrentation(),nor);
+                   if(theta<0)
+                       Normal=Force(nor,ballforce.getStrength()*fabs(theta));
+                   Force total(Normal-J);
+                   friction.setStrength(total.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
+                   ballforce+=total;
+               }
+               else
+               {
+                   friction.setStrength(J.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
+                   applytorque(J+friction,*p,true);
+                   ballforce-=J;
+               }
            }
 		   else 
            {

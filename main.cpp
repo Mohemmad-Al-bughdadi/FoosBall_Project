@@ -20,16 +20,16 @@ GLuint* GetTextIds(string texture_names[6])
 Wall * SkyBox;
 bool pressed[4]={false};
 bool enemypressed[4] = {false };
-#define HAND_POWER 1000.0f
-#define ROUND_POWER HAND_POWER*100
+#define HAND_POWER 500.0f
+#define ROUND_POWER HAND_POWER
 #define SFC_HANDLE 0.2f
 #define SFC_PLAYER 0.15f
 #define SFC_BALL 0.2f
 #define SFC_GROUND 0.7f
 #define SFC_WALLS 0.64f
 #define RC_HANDEL 0.1f
-#define RC_PLAYER 0.2f
-#define RC_BALL 0.2f
+#define RC_PLAYER 0.8f
+#define RC_BALL 0.3f
 #define RC_GROUND 0.7f
 #define RC_WALL 0.8f
 
@@ -124,6 +124,7 @@ void handlephysics()
         goalkeepers->collidewithball(*ball,ballforce);
         defensers->collidewithball(*ball,ballforce);
         miders->collidewithball(*ball,ballforce);
+
         attackers->collidewithball(*ball,ballforce);
         enemygoalkeepers->collidewithball(*ball,ballforce);
         enemydefensers->collidewithball(*ball,ballforce);
@@ -148,22 +149,21 @@ void handlephysics()
         enemymiders->collidewallwithballs(*Left_side,handleforces[6]);
         enemyattackers->collidewallwithballs(*Left_side,handleforces[7]);
 
-    miders->collidewallwithballs(*Right_side,handleforces[2]);
-    miders->collidewallwithballs(*Left_side,handleforces[2]);
         goalkeepers->applyforce(handleforces[0],false);
         defensers->applyforce(handleforces[1],false);
         miders->applyforce(handleforces[2],false);
+
         attackers->applyforce(handleforces[3],false);
         enemygoalkeepers->applyforce(handleforces[4],false);
         enemydefensers->applyforce(handleforces[5],false);
         enemymiders->applyforce(handleforces[6],false);
         enemyattackers->applyforce(handleforces[7],false);
 
-        //ball->applyforce(ballforce,false);
+        ball->applyforce(ballforce,false);
 
         ball->proceedintime();
-        defensers->proceedintime();
         miders->proceedintime();
+        defensers->proceedintime();
         attackers->proceedintime();
         goalkeepers->proceedintime();
 
@@ -171,7 +171,6 @@ void handlephysics()
         enemymiders->proceedintime();
         enemyattackers->proceedintime();
         enemygoalkeepers->proceedintime();
-
 	
 }
 void KeyboardDown(unsigned char key, int x, int y)
@@ -245,7 +244,7 @@ void Keyboard_Press(void)
 	}	
 	if (Keys['o'])
 	{
-        attackers->applytorque(Vector3(ROUND_POWER , 0, 0), false);
+        miders->applytorque(Vector3(ROUND_POWER , 0, 0), false);
 	}
 	if (Keys['p'])
 	{
@@ -610,7 +609,7 @@ int main(int argc, char *argv[])
     enemydefensers->fillconstants(Left_side);
     enemyattackers->fillconstants(Left_side);
     enemymiders->fillconstants(Left_side);
-    ball = new Ball(1, Vector3(6, 15, -18), BALL_MASS, Line(Vector3(4,15,-18), Vector3(6,15,-18)), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
+    ball = new Ball(1.5, Vector3(6, 15, 1), BALL_MASS, Line(Vector3(4,15,1), Vector3(6,15,1)), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, goalkeepers), SFC_HANDLE));
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemygoalkeepers), SFC_HANDLE));
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, defensers), SFC_HANDLE));

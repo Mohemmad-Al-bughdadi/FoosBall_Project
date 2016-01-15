@@ -29,7 +29,7 @@
 #define HALF_LEG_WIDTH LEG_WIDTH/2
 const Vector3 StartPoint(0, 0, 0);
 #define Player_WIDTH 1.5f
-#define Player_HEIGHT (TABLE_HEIGHT/1.6)
+#define Player_HEIGHT (TABLE_HEIGHT/1.3)
 #define Player_DIPTH 1.6f
 #define HALF_Player_WIDTH Player_WIDTH/2
 
@@ -176,7 +176,7 @@ public:
     Vector3 getvelocity(const Vector3 &p)const
     {
         if(!rotationaxis.notaline())
-            return velocity+Plane(rotationaxis.getBegin(),rotationaxis.getEnd(),p).getNormal()*rotationalvelocity*rotationaxis.distancefrom(p);
+            return velocity+Plane(rotationaxis.getBegin(),rotationaxis.getEnd(),p).getNormal()*rotationalvelocity.length()*rotationaxis.distancefrom(p);
         return velocity;
     }
     Vector3 getvelocity()const
