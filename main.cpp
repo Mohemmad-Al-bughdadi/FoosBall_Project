@@ -20,7 +20,7 @@ GLuint* GetTextIds(string texture_names[6])
 Wall * SkyBox;
 bool pressed[4]={false};
 bool enemypressed[4] = {false };
-#define HAND_POWER 500.0f
+#define HAND_POWER 100.0f
 #define ROUND_POWER HAND_POWER
 #define SFC_HANDLE 0.2f
 #define SFC_PLAYER 0.15f
@@ -163,6 +163,7 @@ void handlephysics()
 
         ball->proceedintime();
         miders->proceedintime();
+        cout<<miders->whathasbeenrotated()<<'\n';
         defensers->proceedintime();
         attackers->proceedintime();
         goalkeepers->proceedintime();
@@ -609,7 +610,7 @@ int main(int argc, char *argv[])
     enemydefensers->fillconstants(Left_side);
     enemyattackers->fillconstants(Left_side);
     enemymiders->fillconstants(Left_side);
-    ball = new Ball(1.5, Vector3(6, 15, 1), BALL_MASS, Line(Vector3(4,15,1), Vector3(6,15,1)), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
+    ball = new Ball(1.5, Vector3(6, 15, 13), BALL_MASS, Line(Vector3(4,15,13), Vector3(6,15,13)), true, Vector3(1, 1, 1), LoadTexture("ball.bmp"), 0);
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, goalkeepers), SFC_HANDLE));
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, enemygoalkeepers), SFC_HANDLE));
     Body::StaticFrictionCoffeciants.insert(pair<BodyPair, double>(BodyPair(ball, defensers), SFC_HANDLE));

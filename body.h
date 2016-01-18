@@ -166,10 +166,10 @@ public:
         Vector3 deltan(velocity*dt);
         centerofmass+=deltan;
         thetarotate+=rotationalvelocity.length()*dt;
-        while(thetarotate<0)
+    /*    while(thetarotate<0)
 			thetarotate += TWOPI;
         while(thetarotate>TWOPI)
-			thetarotate -= TWOPI;
+            thetarotate -= TWOPI;*/
         if(freetochangerotationaxis)
             rotationaxis=Line(rotationaxis.getBegin()+deltan,rotationaxis.getEnd()+deltan);
     }

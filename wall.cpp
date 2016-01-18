@@ -69,24 +69,26 @@ void Wall::Translate(const Vector3 &diff)
     back->Translate(diff);
 }
 
-void Wall::Rotate()
+void Wall::Rotate(const double &diff)
 {
     Vector3 begin=rotationaxis.getBegin(),end=rotationaxis.getEnd();
-    up->Rotate(begin,end,thetarotate);
-    ground->Rotate(begin,end,thetarotate);
-    right->Rotate(begin,end,thetarotate);
-    left->Rotate(begin,end,thetarotate);
-    front->Rotate(begin,end,thetarotate);
-    back->Rotate(begin,end,thetarotate);
+    up->Rotate(begin,end,diff);
+    ground->Rotate(begin,end,diff);
+    right->Rotate(begin,end,diff);
+    left->Rotate(begin,end,diff);
+    front->Rotate(begin,end,diff);
+    back->Rotate(begin,end,diff);
 }
 
 void Wall::proceedintime()
 {
     Vector3 diff=centerofmass;
+    double diffrot=thetarotate;
     Body::proceedintime();
     diff=centerofmass-diff;
+    diffrot=thetarotate-diffrot;
     Translate(diff);
-    Rotate();
+    Rotate(diffrot);
 }
 
 

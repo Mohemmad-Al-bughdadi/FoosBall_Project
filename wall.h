@@ -200,7 +200,7 @@ public:
     void draw(const Vector3 &color)const;
     void proceedintime();
     void Translate(const Vector3 &diff);
-    void Rotate();
+    void Rotate(const double &diff);
     bool operator ==(const Body *b) const;    
 };
 
