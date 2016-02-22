@@ -5,7 +5,7 @@
 struct Force
 {
 private :
-    double strength;
+    float strength;
     Vector3 orentation;
 public :
     Force()
@@ -14,7 +14,7 @@ public :
 
     }
 
-    Force(const Vector3 &v,const double &s)
+    Force(const Vector3 &v,const float &s)
         :strength(s),orentation(v)
     {
         orentation.Normalize();
@@ -32,7 +32,7 @@ public :
     }
     bool iszero()const
     {
-        return orentation.iszero()||(strength==0);
+        return orentation.iszero()||(floatsequal(strength,0));
     }
     Force operator -()const
     {
@@ -68,11 +68,11 @@ public :
         return *this;
     }
 
-    double getStrength() const
+    float getStrength() const
     {
         return strength;
     }
-    void setStrength(const double &value)
+    void setStrength(const float &value)
     {
         strength=value;
     }
@@ -86,9 +86,9 @@ public :
         orentation=value;
         orentation.Normalize();
     }
-    /*double resulttorque(const Vector3 &v,const Line &r)const
+    /*float resulttorque(const Vector3 &v,const Line &r)const
     {
-        double rt=r.distancefrom(v);
+        float rt=r.distancefrom(v);
 		return rt*strength;
     }*/
 };

@@ -25,7 +25,7 @@ public:
     {
         return (begin==end);
     }
-	double distancefrom(const Vector3 &v)const
+	float distancefrom(const Vector3 &v)const
 	{
 		return Vector3::crossproduct(end - begin, begin - v).length() / (end - begin).length();
 	}
@@ -58,63 +58,63 @@ public:
 	}        
     bool ispointin(const Vector3 &p)const
     {
-        double a=orentation.X(),b=orentation.Y(),c=orentation.Z();
-        double x0=begin.X(),y0=begin.Y(),z0=begin.Z();
-        double x=p.X(),y=p.Y(),z=p.Z();
-        if(a==0)
+        float a=orentation.X(),b=orentation.Y(),c=orentation.Z();
+        float x0=begin.X(),y0=begin.Y(),z0=begin.Z();
+        float x=p.X(),y=p.Y(),z=p.Z();
+        if(floatsequal(a,0))
         {
-            if(x!=x0)
+			if (!floatsequal(x, x0))
                 return false;
-            else if(b==0)
+			else if (floatsequal(b, 0))
             {
-                if(y!=y0)
+                if(!floatsequal(y,y0))
                     return false;
-                else if(c==0)
+                else if(floatsequal(c,0))
                 {
-                    if(z!=z0)
+                    if(!floatsequal(z,z0))
                         return false;
                 }
                 return true;
             }
             else
             {
-                if(c==0)
+				if (floatsequal(c, 0))
                 {
-                    if(z!=z0)
+                    if(!floatsequal(z,z0))
                         return false;
                     return true;
                 }
                 else
                 {
-                    return ((y-y0)/b)==((z-z0)/c);
+					return floatsequal((y - y0) / b, ((z - z0) / c));
                 }
             }
         }
         else
         {
-            if(b==0)
+			if (floatsequal(b,0))
             {
-                if(y!=y0)
+				if (!floatsequal(y, y0))
                     return false;
-                else if(c==0)
+				else if (floatsequal(c, 0))
                 {
-                    if(z!=z0)
+                    if(!floatsequal(z,z0))
                         return false;
                     return true;
                 }
-                return ((x-x0)/a)==((z-z0)/c);
+				return (floatsequal((x - x0) / a , ((z - z0) / c)));
             }
             else
             {
-                if(c==0)
+                if(floatsequal(c,0))
                 {
-                    if(z!=z0)
+                    if(!floatsequal(z,z0))
                         return false;
-                    return ((x-x0)/a)==((y-y0)/b);
+                    return (!floatsequal((x-x0)/a,((y-y0)/b)));
                 }
                 else
                 {
-                    return (((y-y0)/b)==((z-z0)/c))&&(((x-x0)/a)==((y-y0)/b));
+                    return ((!floatsequal((y-y0)/b,((z-z0)/c))&&((!floatsequal((x-x0)/a,((y-y0)/b))))));
                 }
             }
         }
@@ -129,7 +129,7 @@ public:
 	}
     static bool intersect(const Line &l1,const Line &l2)
 	{      
-        return (Vector3::crossproduct(l1.getOrentiation(),l2.getOrentiation())*(l1.getBegin()-l2.getBegin()))==0;
+        return floatsequal((Vector3::crossproduct(l1.getOrentiation(),l2.getOrentiation())*(l1.getBegin()-l2.getBegin())),0);
     }
 };
 

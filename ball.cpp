@@ -1,6 +1,6 @@
 #include "ball.h"
-map<BodyPair,double> Ball::RollingFrictionCoffs;
-double Ball::getRadius() const
+map<BodyPair,float> Ball::RollingFrictionCoffs;
+float Ball::getRadius() const
 {
     return radius;
 }
@@ -9,7 +9,7 @@ double Ball::getRadius() const
 
 
 
-Ball::Ball(const double &theradius,const Vector3 &origin,const double &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o)
+Ball::Ball(const float &theradius,const Vector3 &origin,const float &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o)
     :Body(mass, origin, rot,fr,tr,o)
     ,radius(theradius), texture_id(theTexure)
 {
@@ -23,7 +23,7 @@ void Ball::draw(const Vector3 &color) const
 	glPushMatrix();
     glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-    glColor3dv(color.toArray());
+    glColor3fv(color.toArray());
 
     Vector3 b = rotationaxis.getBegin();
     Vector3 e = rotationaxis.getEnd() - b;
@@ -32,7 +32,7 @@ void Ball::draw(const Vector3 &color) const
     glTranslated(-b.X(), -b.Y(), -b.Z());
     glTranslated(centerofmass.X(), centerofmass.Y(), centerofmass.Z());
 
-    glColor3dv(color.toArray());
+    glColor3fv(color.toArray());
 
     glTexGeni(GL_S, GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);
     glTexGeni(GL_T, GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);

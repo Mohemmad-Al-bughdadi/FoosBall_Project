@@ -30,13 +30,13 @@ public :
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, textid);
 		glEnable(GL_TEXTURE_2D);
-        glColor3dv(color.toArray());
+        glColor3fv(color.toArray());
         glBegin(GL_QUADS);
-        glNormal3dv(p.getNormal().toArray());
-        glTexCoord2d(1, 1); glVertex3dv(p1.toArray());
-        glTexCoord2d(0, 1); glVertex3dv(p2.toArray());
-        glTexCoord2d(0, 0); glVertex3dv(p3.toArray());
-        glTexCoord2d(1, 0); glVertex3dv(p4.toArray());
+        glNormal3fv(p.getNormal().toArray());
+        glTexCoord2d(1, 1); glVertex3fv(p1.toArray());
+        glTexCoord2d(0, 1); glVertex3fv(p2.toArray());
+        glTexCoord2d(0, 0); glVertex3fv(p3.toArray());
+        glTexCoord2d(1, 0); glVertex3fv(p4.toArray());
         glEnd();
 		glDisable(GL_TEXTURE_2D);
 		glPopMatrix();
@@ -59,7 +59,7 @@ public :
         p4.Translate(v);
         p.Translate(v);
     }
-    void Rotate(const Vector3 &p11,const Vector3 &p21,const double &theta)
+    void Rotate(const Vector3 &p11,const Vector3 &p21,const float &theta)
     {
         p1.Rotate(p11,p21,theta);
         p2.Rotate(p11,p21,theta);
@@ -78,12 +78,12 @@ public :
         if(pint!=NULL)
         {           
             Vector3 pintde=*pint;
-            double theta= Vector3::anglebetweeninradian(p1-pintde,p2-pintde)
+            float theta= Vector3::anglebetweeninradian(p1-pintde,p2-pintde)
                     +Vector3::anglebetweeninradian(p2-pintde,p3-pintde)
                     +Vector3::anglebetweeninradian(p3-pintde,p4-pintde)
                     +Vector3::anglebetweeninradian(p4-pintde,p1-pintde);
             theta*=180/PI;            
-            if(!doublesequal(theta,360))
+            if(!floatsequal(theta,360))
                 return 0;
         }        
         return pint;
@@ -92,12 +92,12 @@ public :
 class Wall : public Body
 {    
 private:
-    const double dipth, width , height;
+    const float dipth, width , height;
     void checknormals();
 public:
 	Quad *left, *right, *front, *back, *ground, *up;
 
-    Wall(const double &thewidth,const double &theheight,const double &thedipth, const double &mass,Vector3 center,const Line &rot,const bool &fr,const Vector3 &frt,Body *o,GLuint*tids);
+    Wall(const float &thewidth,const float &theheight,const float &thedipth, const float &mass,Vector3 center,const Line &rot,const bool &fr,const Vector3 &frt,Body *o,GLuint*tids);
     ~Wall()
     {
         delete left;
@@ -107,15 +107,15 @@ public:
         delete ground;
         delete up;
     }
-    double getdipth()const
+    float getdipth()const
     {
         return dipth;
     }
-    double getheight()const
+    float getheight()const
     {
         return height;
     }
-    double getwidth()const
+    float getwidth()const
     {
         return width;
     }
@@ -125,10 +125,11 @@ public:
        Quad q(*left);
        if((((p=up->collidewithball(b,q)))!=NULL)||((p=right->collidewithball(b,q))!=NULL)||((p=left->collidewithball(b,q))!=NULL)||((p=ground->collidewithball(b,q))!=NULL)||((p=front->collidewithball(b,q))!=NULL)||((p=back->collidewithball(b,q))!=NULL))
        {		 
-           double e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
+           float e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
            Force J;
-           Vector3 v=b.getvelocity()-velocity;
-           if(!v.iszero())
+		   Vector3 totalvelocity(velocity + getvelocity(*p));
+		   Vector3 v = b.getvelocity() - totalvelocity;
+         /*  if(!v.iszero())
            {
               Plane plane=q.getplane();
               v=v-plane.projectonplane(v);
@@ -138,7 +139,10 @@ public:
                   J.setOrentation(v);
                   J.setStrength(v.length()/dt);
               }
-           }
+           }*/
+		   J.setOrentation(v);
+		   J.setStrength((v*((e + 1) / ((1 / b.getmass()) + (1 / mass))) / dt).length());
+
            Force friction(Vector3(),0);
            Force Normal;
            v=b.getvelocity(*p)-getvelocity(*p);
@@ -158,7 +162,7 @@ public:
                    Vector3 ballorigin=b.getcenterofmass();
                    if(((qp.isnormaldown())&&(qp.ispointupper(ballorigin)))||((!qp.isnormaldown())&&(qp.ispointlower(ballorigin))))
                        nor=-nor;
-                   double theta=Vector3::cosbetween(ballforce.getOrentation(),nor);
+                   float theta=Vector3::cosbetween(ballforce.getOrentation(),nor);
                    if(theta<0)
                        Normal=Force(nor,ballforce.getStrength()*fabs(theta));
                    Force total(Normal-J);
@@ -187,10 +191,12 @@ public:
            else if((v1.iszero())&&(!ballforce.iszero()))
            {
                Force ballforceprojection(Plane((b.getcenterofmass()-(*p)),*p).projectonplane(ballforce.getOrentation()*ballforce.getStrength()));               
+			   //ÈÚÏ ÍÓÇÈ ÞæÉ ÇáßÑÉ ÇáäÇÙãíÉ Êßæä ÇáããÇÓíÉ åí äÇÊÌ ØÑÍ ÇáÞæÉ ÇáäÇÙãíÉ ãä ÇáÞæÉ
+			   ballforceprojection = ballforce - ballforceprojection;
                friction.setOrentation(-ballforceprojection.getOrentation());               
                friction.setStrength(Normal.getStrength()*(*Body::StaticFrictionCoffeciants.find(BodyPair(&b,this))).second);
                Force tot=ballforceprojection+friction;
-               if(Vector3::anglebetweeninradian(tot.getOrentation(),friction.getOrentation())==0)
+               if(floatsequal(Vector3::anglebetweeninradian(tot.getOrentation(),friction.getOrentation()),0))
                    ballforce=Force();
                else
                    b.applytorque(friction,*p,true);
@@ -200,7 +206,7 @@ public:
     void draw(const Vector3 &color)const;
     void proceedintime();
     void Translate(const Vector3 &diff);
-    void Rotate(const double &diff);
+    void Rotate(const float &diff);
     bool operator ==(const Body *b) const;    
 };
 

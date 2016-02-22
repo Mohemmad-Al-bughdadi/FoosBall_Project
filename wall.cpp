@@ -11,7 +11,7 @@ void Wall::checknormals()
     up->checknormal(centerofmass);
 }
 
-Wall::Wall(const double &thewidth, const double &theheight, const double &thedipth, const double &themass, Vector3 thecenter,const Line &rot,const bool &fr,const Vector3 &frt,Body *o, GLuint *tids)
+Wall::Wall(const float &thewidth, const float &theheight, const float &thedipth, const float &themass, Vector3 thecenter,const Line &rot,const bool &fr,const Vector3 &frt,Body *o, GLuint *tids)
 :Body(themass,thecenter, rot, fr, frt, o), dipth(thedipth), width(thewidth), height(theheight)
 {
     inertia=themass*((theheight*theheight)+(thedipth*thedipth))/12;
@@ -69,7 +69,7 @@ void Wall::Translate(const Vector3 &diff)
     back->Translate(diff);
 }
 
-void Wall::Rotate(const double &diff)
+void Wall::Rotate(const float &diff)
 {
     Vector3 begin=rotationaxis.getBegin(),end=rotationaxis.getEnd();
     up->Rotate(begin,end,diff);
@@ -83,7 +83,7 @@ void Wall::Rotate(const double &diff)
 void Wall::proceedintime()
 {
     Vector3 diff=centerofmass;
-    double diffrot=thetarotate;
+    float diffrot=thetarotate;
     Body::proceedintime();
     diff=centerofmass-diff;
     diffrot=thetarotate-diffrot;

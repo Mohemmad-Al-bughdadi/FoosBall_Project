@@ -1,4 +1,4 @@
 #include "body.h"
-unordered_map<BodyPair,double,KeyHasher> Body::StaticFrictionCoffeciants;
-unordered_map<BodyPair,double,KeyHasher> Body::RestCoffeciants;
+unordered_map<BodyPair,float,KeyHasher> Body::StaticFrictionCoffeciants;
+unordered_map<BodyPair,float,KeyHasher> Body::RestCoffeciants;
 

@@ -8,14 +8,14 @@
 class Ball : public Body
 {
 private:
-    double radius;
+    float radius;
     const unsigned int texture_id;
 public:
-    static map<BodyPair,double> RollingFrictionCoffs;
-    Ball(const double &theradius,const Vector3 &origin,const double &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o);
+    static map<BodyPair,float> RollingFrictionCoffs;
+    Ball(const float &theradius,const Vector3 &origin,const float &mass,const Line &rot,const bool &fr,const Vector3 &tr,const GLuint &theTexure,Body *o);
     ~Ball(){}
     virtual void draw(const Vector3 &color)const;
-    double getRadius() const;
+    float getRadius() const;
     Vector3 *collidewithball(const Line &l)const
     {
         Vector3 *p=0;
@@ -23,8 +23,8 @@ public:
         {
             Vector3 beg=l.getBegin();
             Vector3 oren=l.getOrentiation();
-            double L = (beg - centerofmass).length();
-            double t=sqrt(L*L-radius*radius);
+            float L = (beg - centerofmass).length();
+            float t=sqrt(L*L-radius*radius);
             p=new Vector3(beg+oren*t);
 			if (((*p) - centerofmass).length()>L)
             {
@@ -37,7 +37,7 @@ public:
     Vector3 *collidewithball(const Plane &p)const
     {
         Vector3 ballorigin=centerofmass;
-        double dist=p.distancefrom(ballorigin);       
+        float dist=p.distancefrom(ballorigin);       
         if(dist<=radius)
         {           
             Vector3 nor=p.getNormal();            
@@ -67,7 +67,7 @@ public:
         Vector3 *p=0;
         if((p=ballwithball(b))!=NULL)
         {
-            double e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
+            float e=Body::RestCoffeciants.find(BodyPair(&b,this))->second;
             Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
             Force J(v,v.length()/dt);
             Force friction(Vector3(),0);

@@ -1,5 +1,5 @@
 #ifndef DOUBLEHELPER
 #define DOUBLEHELPER
-bool doublesequal(const double &x, const double &y);
+bool floatsequal(const float &x, const float &y);
 #endif // DOUBLEHELPER
 

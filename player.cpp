@@ -1,5 +1,5 @@
 #include "player.h"
-Player::Player(const Vector3 &cen, const double &mass, const Line &rot, const bool &fr, const Vector3 &frt, Body *o)
+Player::Player(const Vector3 &cen, const float &mass, const Line &rot, const bool &fr, const Vector3 &frt, Body *o)
 :Body(mass, cen, rot, fr, frt, o)
 , body(new Wall(Player_WIDTH, Player_HEIGHT, Player_DIPTH, mass, cen, rot, fr, frt, this, NULL))
 {    
@@ -30,6 +30,17 @@ void Player::proceedintime()
     Body::proceedintime();
     body->proceedintime();
 }
+void Player::stopRotation(const bool &applyonorigin)
+{
+    Body::stopRotation(applyonorigin);
+    if(!applyonorigin)
+        body->stopRotation(false);
+}
+void Player::stopMovement(const bool &applyonorigin)
+{
+    Body::stopMovement(applyonorigin);
+    if(!applyonorigin)
+        body->stopMovement(false);}
 
 void Player::collidewithball(Ball &b, Force &ballforce)
 {
@@ -39,12 +50,14 @@ void Player::collidewithball(Ball &b, Force &ballforce)
 void Player::applytorque(const Force &f, const Vector3 &p, const bool &applyonorigin)
 {
     Body::applytorque(f,p,applyonorigin);
-    body->applytorque(f,p,false);
+    if(!applyonorigin)
+        body->applytorque(f,p,false);
 }
 
 void Player::applytorque(const Vector3 &torque, const bool &applyonorigin)
 {
     Body::applytorque(torque,applyonorigin);
-    body->applytorque(torque,false);
+    if(!applyonorigin)
+        body->applytorque(torque,false);
 }
 

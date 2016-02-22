@@ -8,7 +8,7 @@
 #include "Hash.h"
 #include <map>
 
-#define WALL_THICKNESS 4
+#define WALL_THICKNESS 3
 #define HALF_WALL_THICKNESS WALL_THICKNESS/2
 #define TABLE_WIDTH 36
 #define HALF_WIDTH	 TABLE_WIDTH/2
@@ -28,9 +28,9 @@
 #define HALF_LEG_DIPTH LEG_DIPTH/2
 #define HALF_LEG_WIDTH LEG_WIDTH/2
 const Vector3 StartPoint(0, 0, 0);
-#define Player_WIDTH 1.5f
-#define Player_HEIGHT (TABLE_HEIGHT/1.3)
-#define Player_DIPTH 1.6f
+#define Player_WIDTH 1.3f
+#define Player_HEIGHT (TABLE_HEIGHT-1)
+#define Player_DIPTH 1.3f
 #define HALF_Player_WIDTH Player_WIDTH/2
 
 #ifdef __linux__
@@ -48,17 +48,17 @@ using namespace tr1;
 
 
 using namespace std;
-#define dt 0.01
+#define dt 0.02
 class Body
 {
 protected:   
 	Vector3 centerofmass;
-	const double mass;
-    double inertia;
+	const float mass;
+    float inertia;
 	Vector3 velocity;   
 	Line rotationaxis;
     Vector3 rotationalvelocity;
-	double thetarotate;
+	float thetarotate;
     bool freetochangerotationaxis;
     Vector3 transition;
     Body *origin;
@@ -72,13 +72,13 @@ protected:
             r=-r;
         return Vector3::crossproduct(r,f.getOrentation()*f.getStrength());
     }
-    double getoriginmass()const
+    float getoriginmass()const
     {
         if(origin!=0)
             return origin->getoriginmass();
         return mass;
     }
-    double getorigininertia()const
+    float getorigininertia()const
     {
         if(origin!=0)
             return origin->getorigininertia();
@@ -86,9 +86,9 @@ protected:
     }
 public:
 	
-    static unordered_map<BodyPair,double,KeyHasher> StaticFrictionCoffeciants;
-    static unordered_map<BodyPair, double,KeyHasher> RestCoffeciants;
-    Body(const double &themass, Vector3 thecenter, const Line &r,const bool &fr,const Vector3 &frt,Body *o) :
+    static unordered_map<BodyPair,float,KeyHasher> StaticFrictionCoffeciants;
+    static unordered_map<BodyPair, float,KeyHasher> RestCoffeciants;
+    Body(const float &themass, Vector3 thecenter, const Line &r,const bool &fr,const Vector3 &frt,Body *o) :
 		centerofmass(thecenter), mass(themass)
 		, velocity(Vector3(0, 0, 0)), rotationaxis(r)
         , rotationalvelocity(0), thetarotate(0)
@@ -96,10 +96,34 @@ public:
 	{
 
 	}
+    virtual void stopRotation(const bool &applyonorigin)
+    {
+        if((origin!=NULL)&&(applyonorigin))
+            origin->stopRotation(true);
+        else
+        {
+            rotationalvelocity.reset();
+        }
+    }
+    virtual void stopMovement(const bool &applyonorigin)
+    {
+        if((origin!=NULL)&&(applyonorigin))
+            origin->stopMovement(true);
+        else
+        {
+            velocity.reset();
+        }
+    }
+    void stop(const bool &applyonorigin)
+    {
+        stopRotation(applyonorigin);
+        stopMovement(applyonorigin);
+    }
+
     virtual ~Body(){}
     virtual void applyforce(const Force &f,const bool &applyonorigin)
     {
-        double m=getoriginmass();							  
+        float m=getoriginmass();							  
         if((origin!=0)&&(applyonorigin))
             origin->applyforce(f,true);
         else
@@ -148,17 +172,17 @@ public:
     {
         return rotationalvelocity;
     }
-    double whathasbeenrotated()const
+    float whathasbeenrotated()const
     {
         return thetarotate;
     } 
-    double getmass() const
+    float getmass() const
     {
         return mass;
     }
-    double getinertia()const
+    float getinertia()const
     {
-        double r=rotationaxis.distancefrom(centerofmass);
+        float r=rotationaxis.distancefrom(centerofmass);
         return inertia+mass*r*r;
     }
     virtual void proceedintime()

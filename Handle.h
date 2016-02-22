@@ -1,6 +1,6 @@
 #ifndef HANDLE_H
 #define HANDLE_H
-#define STICK 10
+#define STICK 35
 #define ROD_LENGTH TABLE_WIDTH+STICK
 #include "ball.h"
 #include "player.h"
@@ -16,11 +16,11 @@ class Handle :public Body
 {
 private:
 	Handle_Type Htype;
-	const double radius;
+	const float radius;
     vector<Player*> players;
     vector<Ball*> balls;
     public:
-        Handle(const Handle_Type &thetype, const double &handle_mass, const Vector3 &handle_center,const Line &handle_rotationaxis,const double &r,const bool &fr,const Vector3 &frt,Body *o);
+        Handle(const Handle_Type &thetype, const float &handle_mass, const Vector3 &handle_center,const Line &handle_rotationaxis,const float &r,const bool &fr,const Vector3 &frt,Body *o);
         ~Handle()
         {
 			for (unsigned int i = 0; i<players.size(); i++)
@@ -31,6 +31,8 @@ private:
 
        virtual void draw(const Vector3 &color)const;
 	   bool operator ==(const Body *b) const;
+       void stopRotation(const bool &applyonorigin);
+       void stopMovement(const bool &applyonorigin);
        int numberofplayers()const
        {
            return players.size();
@@ -51,7 +53,7 @@ private:
        void collidewithball(Ball &b,Force &ballforce)
        {
            Vector3 cen=b.getcenterofmass();
-           double brad=b.getRadius();
+           float brad=b.getRadius();
            /*if(rotationaxis.distancefrom(cen)<=radius+brad)
            {
                Vector3 beg=rotationaxis.getBegin(),end=rotationaxis.getEnd();
@@ -62,7 +64,7 @@ private:
                else
                    beg=cen+(nor*brad);
 
-               double e=(*Body::RestCoffeciants.find(BodyPair(&b,this))).second;
+               float e=(*Body::RestCoffeciants.find(BodyPair(&b,this))).second;
                Vector3 v=(b.getvelocity()-velocity)*((e+1)/((1/b.getmass())+(1/mass)));
                Force J(v,v.length()/dt);
                Force friction(Vector3(),0);
